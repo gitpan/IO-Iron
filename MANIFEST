@@ -1,0 +1,30 @@
+Changes
+lib/IO/Iron.pm
+lib/IO/Iron/ClientBase.pm
+lib/IO/Iron/Common.pm
+lib/IO/Iron/Connection.pm
+lib/IO/Iron/Connector.pm
+lib/IO/Iron/ConnectorBase.pm
+lib/IO/Iron/IronCache/Api.pm
+lib/IO/Iron/IronCache/Cache.pm
+lib/IO/Iron/IronCache/Client.pm
+lib/IO/Iron/IronCache/Item.pm
+lib/IO/Iron/IronMQ/Api.pm
+lib/IO/Iron/IronMQ/Client.pm
+lib/IO/Iron/IronMQ/Message.pm
+lib/IO/Iron/IronMQ/Queue.pm
+MANIFEST
+perlcriticrc
+README
+t/boilerplate.t
+t/common.pm
+t/pod-coverage.t
+t/pod.t
+t/Iron/00-load.t
+t/Iron/02-iron_all.t
+t/IronCache
+t/IronMQ
+t/IronWorker
+Makefile.PL
+META.yml                                 Module YAML meta-data (added by MakeMaker)
+META.json                                Module JSON meta-data (added by MakeMaker)

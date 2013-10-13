@@ -1,0 +1,60 @@
+{
+   "abstract" : "Client Libraries to Iron services IronCache, IronMQ and IronWorker.",
+   "author" : [
+      "Mikko Koivunalho <mikko.koivunalho@iki.fi>"
+   ],
+   "dynamic_config" : 1,
+   "generated_by" : "ExtUtils::MakeMaker version 6.68, CPAN::Meta::Converter version 2.131560",
+   "license" : [
+      "unknown"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "IO-Iron",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "inc"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "File::Copy" : "2.21",
+            "File::Remove" : "1.52",
+            "Log::Any::Test" : "0.15",
+            "Test::Exception" : "0",
+            "Test::More" : "0",
+            "YAML::Tiny" : "1.51"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Carp::Assert" : "0.2",
+            "Carp::Assert::More" : "1.12",
+            "English" : "0",
+            "Exception::Class" : "1.37",
+            "File::HomeDir" : "1",
+            "File::Slurp" : "9999.19",
+            "File::Spec" : "0",
+            "Hash::Util" : "0",
+            "JSON" : "2.53",
+            "Log::Any" : "0.15",
+            "REST::Client" : "88",
+            "Scalar::Util" : "1.27",
+            "Try::Tiny" : "0.18",
+            "URI::Escape" : "3.31",
+            "perl" : "5.006002"
+         }
+      }
+   },
+   "release_status" : "testing",
+   "version" : "0.01_03"
+}
