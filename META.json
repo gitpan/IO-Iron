@@ -25,7 +25,7 @@
             "File::Copy" : "2.21",
             "File::Remove" : "1.52",
             "Log::Any::Test" : "0.15",
-            "Test::Exception" : "0",
+            "Test::Exception" : "0.31",
             "Test::More" : "0",
             "YAML::Tiny" : "1.51"
          }
@@ -37,6 +37,7 @@
       },
       "runtime" : {
          "requires" : {
+            "Carp" : "1.26",
             "Carp::Assert" : "0.2",
             "Carp::Assert::More" : "1.12",
             "English" : "0",
@@ -56,5 +57,5 @@
       }
    },
    "release_status" : "testing",
-   "version" : "0.01_03"
+   "version" : "0.01_04"
 }

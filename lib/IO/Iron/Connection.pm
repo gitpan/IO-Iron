@@ -2,6 +2,7 @@ package IO::Iron::Connection;
 
 ## no critic (Documentation::RequirePodAtEnd)
 ## no critic (Documentation::RequirePodSections)
+## no critic (RegularExpressions::RequireLineBoundaryMatching)
 
 use 5.008_001;
 use strict;
@@ -22,11 +23,11 @@ IO::Iron::Connection - Iron.io Connection reference for Perl Client Libraries!
 
 =head1 VERSION
 
-Version 0.01_03
+Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_03';
+our $VERSION = '0.01_04';
 
 
 =head1 SYNOPSIS
@@ -36,7 +37,6 @@ This package is for internal use of IO::Iron packages.
 =cut
 
 use Log::Any  qw{$log};
-use utf8;
 use Hash::Util qw{lock_keys unlock_keys};
 use Carp::Assert;
 use Carp::Assert::More;
@@ -135,6 +135,8 @@ sub perform_iron_action {
 	my $require_body = $iron_action->{'require_body'};
 	my $paged = $iron_action->{'paged'} ? $iron_action->{'paged'} : 0;
 	my $per_page = $iron_action->{'per_page'} ? $iron_action->{'per_page'} : 0;
+	my $log_message = $iron_action->{'log_message'} ? $iron_action->{'log_message'} : q{};
+	my $request_fields = $iron_action->{'request_fields'} ? $iron_action->{'request_fields'} : {};
 
 	$params->{'{Protocol}'} = $self->{'protocol'};
 	$params->{'{Port}'} = $self->{'port'};
@@ -147,6 +149,18 @@ sub perform_iron_action {
 
 	my $connector = $self->{'connector'};
 	my ($http_status_code, $returned_msg) = $connector->perform_iron_action($iron_action, $params);
+
+	# Logging
+	foreach my $key (sort keys %{$params}) {
+		my $value = $params->{$key};
+		$log_message =~ s/$key/$value/gs; ## no critic (RegularExpressions::RequireExtendedFormatting)
+	};
+	foreach my $key (sort keys %{$request_fields}) {
+		my $field_name = $request_fields->{$key};
+		my $field_value = $params->{'body'}->{$key} ? $params->{'body'}->{$key} : '';
+		$log_message =~ s/$field_name/$field_value/gs; ## no critic (RegularExpressions::RequireExtendedFormatting)
+	};
+	$log->info($log_message);
 	$log->tracef('Exiting perform_iron_action(): %s', $returned_msg );
 	return $http_status_code, $returned_msg;
 }

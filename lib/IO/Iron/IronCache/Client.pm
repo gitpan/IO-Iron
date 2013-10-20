@@ -22,11 +22,11 @@ IO::Iron::IronCache::Client - IronCache (Online Item-Value Storage) Client.
 
 =head1 VERSION
 
-Version 0.01_03
+Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_03';
+our $VERSION = '0.01_04';
 
 
 =head1 SYNOPSIS
@@ -112,7 +112,6 @@ use Log::Any  qw{$log};
 use JSON;
 use File::Spec qw{read_file};
 use File::HomeDir;
-use utf8;
 use Hash::Util qw{lock_keys lock_keys_plus unlock_keys legal_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';
@@ -391,7 +390,7 @@ sub new {
 		}
 	);
 	$self->{'connection'} = $client;
-	$log->infof('IronCache client created with config: (project_id=%s; token=%s; host=%s; timeout=%s).', $config->{'project_id'}, $config->{'token'}, $config->{'host'}, $config->{'timeout'});
+	$log->debugf('IronCache client created with config: (project_id=%s; token=%s; host=%s; timeout=%s).', $config->{'project_id'}, $config->{'token'}, $config->{'host'}, $config->{'timeout'});
 	$log->tracef('Exiting new: %s', $self);
 	return $self;
 }
@@ -430,8 +429,6 @@ sub get_caches {
 		push @caches, $cache;
 	}
 	push @{$self->{'caches'}}, @caches;
-	$log->infof('get_caches() successful.');
-	$log->infof('Created %d IO::Iron::IronCache::Cache objects.', scalar @caches);
 	$log->debugf('Created caches: %s', \@caches);
 
 	$log->tracef('Exiting get_caches: %s', \@caches);
@@ -466,7 +463,6 @@ sub get_info_about_cache {
 	# info:
 	# {'id':'523566104a734c39bf00041e','project_id':'51bdf5fb2267d84ced002c99',
 	# 'name':'TEST_CACHE_01','size':0,'data_size':0}
-	$log->infof('get_info_about_cache() successful.');
 	$log->tracef('Exiting get_info_about_cache: %s', $info);
 	return $info;
 }
@@ -507,7 +503,7 @@ sub get_cache {
 		'connection' => $self->{'connection'},
 	});
 	push @{$self->{'caches'}}, $cache;
-	$log->infof('Created a new IO::Iron::IronCache::Cache object (name=%s.', $get_cache_name);
+	$log->debugf('Created a new IO::Iron::IronCache::Cache object (name=%s.', $get_cache_name);
 	$log->tracef('Exiting get_cache: %s', $cache);
 	return $cache;
 }
@@ -544,7 +540,7 @@ sub create_cache {
 	});
 	push @{$self->{'caches'}}, $cache;
 
-	$log->infof('Created a new IO::Iron::IronCache::Cache object (name=%s.', $cache_name);
+	$log->debugf('Created a new IO::Iron::IronCache::Cache object (name=%s.', $cache_name);
 	$log->tracef('Exiting get_cache: %s', $cache);
 	return $cache;
 }
@@ -578,7 +574,6 @@ sub delete_cache {
 			}
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
-	$log->infof('Deleted IronCache cache (cache name=%s.', $cache_name);
 	$log->tracef('Exiting delete_cache: %d', 1);
 	return 1;
 }

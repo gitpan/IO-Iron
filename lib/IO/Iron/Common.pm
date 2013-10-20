@@ -22,11 +22,11 @@ IO::Iron::Common - Common routines for Client Libraries to Iron services IronCac
 
 =head1 VERSION
 
-Version 0.01_03
+Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_03';
+our $VERSION = '0.01_04';
 
 
 =head1 REQUIREMENTS
@@ -38,7 +38,6 @@ use Log::Any  qw{$log};
 use JSON;
 use File::Spec qw{read_file};
 use File::HomeDir;
-use utf8;
 use Hash::Util qw{lock_keys unlock_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';

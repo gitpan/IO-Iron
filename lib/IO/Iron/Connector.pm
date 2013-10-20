@@ -25,11 +25,11 @@ IO::Iron::Connector - REST API Connector, HTTP interface class.
 
 =head1 VERSION
 
-Version 0.01_03
+Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_03';
+our $VERSION = '0.01_04';
 
 
 =head1 SYNOPSIS
@@ -39,17 +39,16 @@ This package is for internal use of IO::Iron packages.
 =cut
 
 use Log::Any  qw{$log};
-use utf8;
-use JSON;
+use JSON qw{encode_json decode_json};
 use Hash::Util qw{lock_keys lock_keys_plus unlock_keys legal_keys};
 use Carp::Assert;
 use Carp::Assert::More;
 use Carp;
 use English '-no_match_vars';
 use REST::Client;
+use URI::Escape qw{uri_escape_utf8};
 use Try::Tiny;
 use Scalar::Util qw{blessed};
-use URI::Escape qw{uri_escape_utf8};
 use Exception::Class (
       'IronHTTPCallException' => {
       	fields => ['status_code', 'response_message'],
@@ -68,7 +67,8 @@ use constant { ## no critic (ValuesAndExpressions::ProhibitConstantPragma)
 
 This class object handles the actual http traffic. Parameters are 
 passed from the calling object (partly from API class) via Connection
-class object.
+class object. This class can be mocked and replaced when
+the client objects are created.
 
 
 =head1 SUBROUTINES/METHODS
@@ -164,8 +164,8 @@ sub perform_iron_action { ## no critic (Subroutines::ProhibitExcessComplexity)
 			assert_nonblank( $params->{'{Host Path Prefix}'}, 'params->{Host Path Prefix} is defined and not blank.' );
 			assert_nonblank( $params->{'authorization_token'}, 'params->{authorization_token} is defined and not blank.' );
 			assert_nonblank( $params->{'http_client_timeout'}, 'params->{http_client_timeout} is defined and not blank.' );
-			my $url_encode_these_fields = defined $iron_action->{'url_encode'} ? $iron_action->{'url_encode'} : {};
-			foreach my $field_name (keys %{$url_encode_these_fields}) {
+			my $url_escape_these_fields = defined $iron_action->{'url_escape'} ? $iron_action->{'url_escape'} : {};
+			foreach my $field_name (keys %{$url_escape_these_fields}) {
 				if (defined $params->{$field_name}) {
 					$params->{$field_name} = uri_escape_utf8($params->{$field_name});
 				}
@@ -197,11 +197,11 @@ sub perform_iron_action { ## no critic (Subroutines::ProhibitExcessComplexity)
 		}
 		catch {
 			$log->debugf('Caught exception');
-			croak $_ unless blessed $_ && $_->can('rethrow');
+			croak $_ unless blessed $_ && $_->can('rethrow'); ## no critic (ControlStructures::ProhibitPostfixControls)
 			if ( $_->isa('IronHTTPCallException') ) {
 				if( $_->status_code == HTTP_CODE_SERVICE_UNAVAILABLE() ) {
 					# 503 Service Unavailable. Clients should implement exponential backoff to retry the request.
-					$keep_on_trying = 1 if ($retry == 1);
+					$keep_on_trying = 1 if ($retry == 1); ## no critic (ControlStructures::ProhibitPostfixControls)
 					# TODO Fix this temporary solution for backoff to retry the request.
 				}
 				else {

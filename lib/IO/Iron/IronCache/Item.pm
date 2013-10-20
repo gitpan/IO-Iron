@@ -18,15 +18,15 @@ END {
 
 =head1 NAME
 
-IO::Iron::IronCache::Item
+IO::Iron::IronCache::Item - IronCache (Online Item-Value Storage) Client (Cache Item).
 
 =head1 VERSION
 
-Version 0.01_03
+Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_03';
+our $VERSION = '0.01_04';
 
 
 =head1 SYNOPSIS
@@ -38,7 +38,6 @@ Please see IO::Iron::IronCache::Client for usage.
 =cut
 
 use Log::Any  qw($log);
-use utf8;
 use Hash::Util qw{lock_keys unlock_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';

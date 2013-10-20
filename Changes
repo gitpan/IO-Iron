@@ -1,5 +1,12 @@
 Revision history for Net-IronMQ
 
+0.01_04 2013-Oct-20
+        Developer release. Working IronMQ Client.
+        Logging rethought.
+		Api classes have logging format.
+		All activities using IO::Iron::Connection (actually making a REST operation to Iron services) will be logged.
+		Removed logging from Client classes.
+
 0.01_03 2013-Aug-16
         Developer release. Working IronMQ Client.
 

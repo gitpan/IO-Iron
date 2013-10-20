@@ -26,11 +26,11 @@ IO::Iron - Client Libraries to Iron services IronCache, IronMQ and IronWorker.
 
 =head1 VERSION
 
-Version 0.01_03
+Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_03';
+our $VERSION = '0.01_04';
 
 =head1 SYNOPSIS
 
@@ -90,7 +90,6 @@ as environmental variables or as parameters when creating the object.
 
 # Perl Core
 use File::Spec qw{read_file};
-use utf8;
 use Hash::Util qw{lock_keys unlock_keys};
 use Scalar::Util;
 use English '-no_match_vars';
@@ -101,6 +100,7 @@ use Log::Any qw{$log};
 use JSON;
 use File::HomeDir;
 use Carp::Assert::More;
+use Carp;
 use REST::Client;
 use URI::Escape;
 use Exception::Class;

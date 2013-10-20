@@ -22,29 +22,17 @@ IO::Iron::IronCache::Api - IronCache API reference for Perl Client Libraries!
 
 =head1 VERSION
 
-Version 0.01_03
+Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_03';
+our $VERSION = '0.01_04';
 
 
 =head1 SYNOPSIS
 
 This package is for internal use of IO::Iron::IronCache::Client/Cache packages.
 
-
-=head1 REQUIREMENTS
-
-Requires the following packages:
-
-=over 8
-
-=back
-
-=cut
-
-use utf8;
 
 =head1 DESCRIPTION
 
@@ -71,7 +59,8 @@ sub IRONCACHE_LIST_CACHES {
 			'require_body' => 0,
 			'paged'        => 1,
 			'per_page'     => 100,
-			'url_encode'   => { '{Project ID}' => 1 },
+			'url_escape'   => { '{Project ID}' => 1 },
+			'log_message'  => '(project={Project ID}). Listed caches.',
 		};
 }
 
@@ -87,7 +76,8 @@ sub IRONCACHE_GET_INFO_ABOUT_A_CACHE {
 			'return'       => 'HASH',
 			'retry'        => 1,
 			'require_body' => 0,
-			'url_encode'   => { '{Project ID}' => 1, '{Cache Name}' => 1 },
+			'url_escape'   => { '{Project ID}' => 1, '{Cache Name}' => 1 },
+			'log_message'  => '(project={Project ID}, cache={Cache Name}). Got info about a cache.',
 		};
 }
 
@@ -103,7 +93,8 @@ sub IRONCACHE_DELETE_A_CACHE {
 			'return'       => 'MESSAGE',
 			'retry'        => 1,
 			'require_body' => 0,
-			'url_encode'   => { '{Project ID}' => 1, '{Cache Name}' => 1 },
+			'url_escape'   => { '{Project ID}' => 1, '{Cache Name}' => 1 },
+			'log_message'  => '(project={Project ID}, cache={Cache Name}). Deleted cache.',
 		};
 }
 
@@ -123,7 +114,8 @@ sub IRONCACHE_CLEAR_A_CACHE {
 			'require_body' => 0,
 			'paged'        => 0,
 			'per_page'     => 0,
-			'url_encode'   => { '{Project ID}' => 1, '{Cache Name}' => 1 },
+			'url_escape'   => { '{Project ID}' => 1, '{Cache Name}' => 1 },
+			'log_message'  => '(project={Project ID}, cache={Cache Name}). Cleared cache.',
 		};
 }
 
@@ -141,8 +133,9 @@ sub IRONCACHE_PUT_AN_ITEM_INTO_A_CACHE {
 			'require_body' => 1,
 			'paged'        => 0,
 			'per_page'     => 0,
-			'request_fields' => {'value' => 1, 'expires_in' => 1, 'replace' => 1, 'add' => 1, 'cas' => 1},
-			'url_encode'   => { '{Project ID}' => 1, '{Cache Name}' => 1, '{Key}' => 1 },
+			'request_fields' => {'value' => '{Value}', 'expires_in' => '{Expires In}', 'replace' => '{Replace}', 'add' => '{Put}', 'cas' => '{Cas}'},
+			'url_escape'   => { '{Project ID}' => 1, '{Cache Name}' => 1, '{Key}' => 1 },
+			'log_message'  => '(project={Project ID}, cache={Cache Name}, item={Key}). Put item into cache. Value: \'{Value}\', Expires in: \'{Expires In}\', Replace: \'{Replace}\', Put: \'{Put}\', Cas: \'{Cas}\'.',
 		};
 }
 
@@ -160,8 +153,9 @@ sub IRONCACHE_INCREMENT_AN_ITEMS_VALUE {
 			'require_body' => 1,
 			'paged'        => 0,
 			'per_page'     => 0,
-			'request_fields' => {'amount' => 1},
-			'url_encode'   => { '{Project ID}' => 1, '{Cache Name}' => 1, '{Key}' => 1 },
+			'request_fields' => {'amount' => '{Amount}'},
+			'url_escape'   => { '{Project ID}' => 1, '{Cache Name}' => 1, '{Key}' => 1 },
+			'log_message'  => '(project={Project ID}, cache={Cache Name}, item={Key}). Incremented items value by \'{Amount}\'.',
 		};
 }
 
@@ -177,7 +171,8 @@ sub IRONCACHE_GET_AN_ITEM_FROM_A_CACHE {
 			'return'       => 'HASH',
 			'retry'        => 0,
 			'require_body' => 0,
-			'url_encode'   => { '{Project ID}' => 1, '{Cache Name}' => 1, '{Key}' => 1 },
+			'url_escape'   => { '{Project ID}' => 1, '{Cache Name}' => 1, '{Key}' => 1 },
+			'log_message'  => '(project={Project ID}, cache={Cache Name}, item={Key}). Got item from cache.',
 		};
 }
 
@@ -193,7 +188,8 @@ sub IRONCACHE_DELETE_AN_ITEM_FROM_A_CACHE {
 			'return'       => 'MESSAGE',
 			'retry'        => 0,
 			'require_body' => 0,
-			'url_encode'   => { '{Project ID}' => 1, '{Cache Name}' => 1, '{Key}' => 1 },
+			'url_escape'   => { '{Project ID}' => 1, '{Cache Name}' => 1, '{Key}' => 1 },
+			'log_message'  => '(project={Project ID}, cache={Cache Name}, item={Key}). Deleted item from cache.',
 		};
 }
 

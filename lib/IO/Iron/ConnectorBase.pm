@@ -22,11 +22,11 @@ IO::Iron::ConnectorBase - Base class for the REST API Connector, HTTP interface 
 
 =head1 VERSION
 
-Version 0.01_03
+Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_03';
+our $VERSION = '0.01_04';
 
 
 =head1 SYNOPSIS
@@ -36,7 +36,6 @@ This package is for internal use of IO::Iron packages.
 =cut
 
 use Log::Any  qw{$log};
-use utf8;
 use Hash::Util qw{lock_keys unlock_keys};
 use Carp;
 use Carp::Assert;
@@ -60,7 +59,7 @@ Creator function.
 
 sub new {
 	my ($class) = @_;
-	$log->tracef('Entering new(%s, %s)', $class);
+	$log->tracef('Entering new(%s)', $class);
 	my $self = {};
 	my @self_keys = ( ### no critic (CodeLayout::ProhibitQuotedWordLists)
 		# No keys.

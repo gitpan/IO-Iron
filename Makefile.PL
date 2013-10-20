@@ -6,7 +6,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
 	NAME           => 'IO::Iron',
 	AUTHOR         => q{Mikko Koivunalho <mikko.koivunalho@iki.fi>},
-	VERSION_FROM   => 'lib/IO/Iron.pm', # FIXME where to get the package version.
+	VERSION_FROM   => 'lib/IO/Iron.pm',
 	ABSTRACT_FROM  => 'lib/IO/Iron.pm',
 	LICENSE        => 'Artistic_2_0',
 	PL_FILES       => {},
@@ -21,7 +21,7 @@ WriteMakefile(
 		'File::Remove' => 1.52,
 		'File::Copy' => 2.21,
 		'YAML::Tiny' => 1.51,
-		'Test::Exception' => 0, # TODO Test::Exception version.
+		'Test::Exception' => 0.31,
 	},  # FIXME Test::Manifest? Do we need it?
 	PREREQ_PM => {
 		'Log::Any' => 0.15,
@@ -31,6 +31,7 @@ WriteMakefile(
 		'Hash::Util' => 0, # Core
 		'Carp::Assert' => 0.20,
 		'Carp::Assert::More' => 1.12,
+		'Carp' => 1.26, # Core
 		'English' => 0, # Core
 		'REST::Client' => 88,
 		'File::HomeDir' => 1.00,

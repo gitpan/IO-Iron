@@ -22,30 +22,17 @@ IO::Iron::IronMQ::Api - IronMQ API reference for Perl Client Libraries!
 
 =head1 VERSION
 
-Version 0.01_03
+Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_03';
+our $VERSION = '0.01_04';
 
 
 =head1 SYNOPSIS
 
 This package is for internal use of IO::Iron::IronMQ::Client/Queue packages.
 
-=head1 REQUIREMENTS
-
-Requires the following packages:
-
-=over 8
-
-=item Hash::Util # Core Package
-
-=back
-
-=cut
-
-use utf8;
 
 =head1 DESCRIPTION
 
@@ -69,7 +56,8 @@ sub IRONMQ_LIST_MESSAGE_QUEUES {
 			'require_body' => 0,
 			'paged'        => 1,
 			'per_page'     => 100,
-			'url_encode'   => { '{Project ID}' => 1 },
+			'url_escape'   => { '{Project ID}' => 1 },
+			'log_message'  => '(project={Project ID}). Listed message queues.',
 		};
 }
 
@@ -85,7 +73,8 @@ sub IRONMQ_GET_INFO_ABOUT_A_MESSAGE_QUEUE {
 			'return'       => 'HASH',
 			'retry'        => 1,
 			'require_body' => 0,
-			'url_encode'   => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'url_escape'   => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'log_message'  => '(project={Project ID}, queue={Queue Name}). Got info about a message queue.',
 		};
 }
 
@@ -102,7 +91,8 @@ sub IRONMQ_UPDATE_A_MESSAGE_QUEUE {
 			'retry'        => 1,
 			'require_body' => 1,
 			'request_fields' => { 'subscribers' => 1, 'push_type' => 1, 'retries' => 1, 'retries_delay' => 1 },
-			'url_encode'   => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'url_escape'   => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'log_message'  => '(project={Project ID}, queue={Queue Name}). Updated a message queue.',
 		};
 }
 
@@ -118,7 +108,8 @@ sub IRONMQ_DELETE_A_MESSAGE_QUEUE {
 			'return'       => 'MESSAGE',
 			'retry'        => 1,
 			'require_body' => 0,
-			'url_encode'   => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'url_escape'   => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'log_message'  => '(project={Project ID}, queue={Queue Name}). Deleted message queue.',
 		};
 }
 
@@ -135,7 +126,8 @@ sub IRONMQ_CLEAR_ALL_MESSAGES_FROM_A_QUEUE {
 			'retry'        => 1,
 			'require_body' => 1,
 			'request_fields' => {},
-			'url_encode'   => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'url_escape'   => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'log_message'  => '(project={Project ID}, queue={Queue Name}). Cleared all messages from the queue.',
 		};
 }
 
@@ -147,14 +139,15 @@ sub IRONMQ_CLEAR_ALL_MESSAGES_FROM_A_QUEUE {
 
 sub IRONMQ_ADD_MESSAGES_TO_A_QUEUE {
 	return {
-			'action_name'  => 'IRONMQ_ADD_MESSAGES_TO_A_QUEUE',
-			'href'         => '{Protocol}://{Host}:{Port}{Host Path Prefix}/projects/{Project ID}/queues/{Queue Name}/messages',
-			'action'       => 'POST',
-			'return'       => 'HASH',
-			'retry'        => 1,
-			'require_body' => 1,
+			'action_name'    => 'IRONMQ_ADD_MESSAGES_TO_A_QUEUE',
+			'href'           => '{Protocol}://{Host}:{Port}{Host Path Prefix}/projects/{Project ID}/queues/{Queue Name}/messages',
+			'action'         => 'POST',
+			'return'         => 'HASH',
+			'retry'          => 1,
+			'require_body'   => 1,
 			'request_fields' => { 'messages' => 1 },
-			'url_encode'   => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'url_escape'     => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'log_message'    => '(project={Project ID}, queue={Queue Name}). Pushed messages to the queue.',
 		};
 }
 
@@ -164,15 +157,15 @@ sub IRONMQ_ADD_MESSAGES_TO_A_QUEUE {
 
 sub IRONMQ_GET_MESSAGES_FROM_A_QUEUE {
 	return {
-			'action_name'  => 'IRONMQ_GET_MESSAGES_FROM_A_QUEUE',
-			'href'         => '{Protocol}://{Host}:{Port}{Host Path Prefix}/projects/{Project ID}/queues/{Queue Name}/messages',
-			'action'       => 'GET',
-			'return'       => 'HASH',
-			'retry'        => 1,
-			'require_body' => 0,
-			'request_fields' => { 'messages' => 1 },
-			'url_params'   => { 'n' => 1, 'timeout' => 1 },
-			'url_encode'   => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'action_name'    => 'IRONMQ_GET_MESSAGES_FROM_A_QUEUE',
+			'href'           => '{Protocol}://{Host}:{Port}{Host Path Prefix}/projects/{Project ID}/queues/{Queue Name}/messages',
+			'action'         => 'GET',
+			'return'         => 'HASH',
+			'retry'          => 1,
+			'require_body'   => 0,
+			'url_params'     => { 'n' => 1, 'timeout' => 1 },
+			'url_escape'     => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'log_message'    => '(project={Project ID}, queue={Queue Name}). Pulled messages from the queue.',
 		};
 }
 
@@ -182,14 +175,15 @@ sub IRONMQ_GET_MESSAGES_FROM_A_QUEUE {
 
 sub IRONMQ_PEEK_MESSAGES_ON_A_QUEUE {
 	return {
-			'action_name'  => 'IRONMQ_PEEK_MESSAGES_ON_A_QUEUE',
-			'href'         => '{Protocol}://{Host}:{Port}{Host Path Prefix}/projects/{Project ID}/queues/{Queue Name}/messages/peek',
-			'action'       => 'GET',
-			'return'       => 'HASH',
-			'retry'        => 1,
-			'require_body' => 0,
-			'url_params'   => { 'n' => 1 },
-			'url_encode'   => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'action_name'    => 'IRONMQ_PEEK_MESSAGES_ON_A_QUEUE',
+			'href'           => '{Protocol}://{Host}:{Port}{Host Path Prefix}/projects/{Project ID}/queues/{Queue Name}/messages/peek',
+			'action'         => 'GET',
+			'return'         => 'HASH',
+			'retry'          => 1,
+			'require_body'   => 0,
+			'url_params'     => { 'n' => 1 },
+			'url_escape'     => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'log_message'    => '(project={Project ID}, queue={Queue Name}). Peeked at messages on the queue.',
 		};
 }
 
@@ -199,13 +193,14 @@ sub IRONMQ_PEEK_MESSAGES_ON_A_QUEUE {
 
 sub IRONMQ_DELETE_A_MESSAGE_FROM_A_QUEUE {
 	return {
-			'action_name'  => 'IRONMQ_DELETE_A_MESSAGE_FROM_A_QUEUE',
-			'href'         => '{Protocol}://{Host}:{Port}{Host Path Prefix}/projects/{Project ID}/queues/{Queue Name}/messages/{Message ID}',
-			'action'       => 'DELETE',
-			'return'       => 'MESSAGE',
-			'retry'        => 1,
-			'require_body' => 0,
-			'url_encode'   => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'action_name'    => 'IRONMQ_DELETE_A_MESSAGE_FROM_A_QUEUE',
+			'href'           => '{Protocol}://{Host}:{Port}{Host Path Prefix}/projects/{Project ID}/queues/{Queue Name}/messages/{Message ID}',
+			'action'         => 'DELETE',
+			'return'         => 'MESSAGE',
+			'retry'          => 1,
+			'require_body'   => 0,
+			'url_escape'     => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'log_message'  => '(project={Project ID}, queue={Queue Name}, message_id={Message ID}). Deleted a message from the queue.',
 		};
 }
 
@@ -222,7 +217,8 @@ sub IRONMQ_DELETE_MULTIPLE_MESSAGES_FROM_A_QUEUE {
 			'retry'          => 1,
 			'require_body'   => 1,
 			'request_fields' => { 'ids' => 1 },
-			'url_encode'     => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'url_escape'     => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'log_message'    => '(project={Project ID}, queue={Queue Name}). Deleted messages from the queue.',
 		};
 }
 
@@ -239,7 +235,8 @@ sub IRONMQ_TOUCH_A_MESSAGE_ON_A_QUEUE {
 			'retry'          => 1,
 			'require_body'   => 1,
 			'request_fields' => {},
-			'url_encode'     => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'url_escape'     => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'log_message'    => '(project={Project ID}, queue={Queue Name}, message_id={Message ID}). Touched a message on the queue.',
 		};
 }
 
@@ -256,11 +253,12 @@ sub IRONMQ_RELEASE_A_MESSAGE_ON_A_QUEUE {
 			'retry'          => 1,
 			'require_body'   => 1,
 			'request_fields' => { 'delay' => 1 },
-			'url_encode'     => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'url_escape'     => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'log_message'    => '(project={Project ID}, queue={Queue Name}, message_id={Message ID}). Released a message on the queue.',
 		};
 }
 
-# TODO Push queue stuff missing for the moment
+# TODO Push queue stuff missing.
 
 =head1 AUTHOR
 

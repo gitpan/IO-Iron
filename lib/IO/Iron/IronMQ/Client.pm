@@ -22,11 +22,11 @@ IO::Iron::IronMQ::Client - IronMQ (Message Queue) Client.
 
 =head1 VERSION
 
-Version 0.01_03
+Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_03';
+our $VERSION = '0.01_04';
 
 
 =head1 SYNOPSIS
@@ -96,7 +96,6 @@ use Log::Any  qw{$log};
 use JSON;
 use File::Spec qw{read_file};
 use File::HomeDir;
-use utf8;
 use Hash::Util qw{lock_keys lock_keys_plus unlock_keys legal_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';
@@ -393,7 +392,7 @@ sub new {
 		}
 	);
 	$self->{'connection'} = $connection;
-	$log->infof('IronMQ Connection created with config: (project_id=%s; token=%s; host=%s; timeout=%s).', $config->{'project_id'}, $config->{'token'}, $config->{'host'}, $config->{'timeout'});
+	$log->debugf('IronMQ Connection created with config: (project_id=%s; token=%s; host=%s; timeout=%s).', $config->{'project_id'}, $config->{'token'}, $config->{'host'}, $config->{'timeout'});
 	$log->tracef('Exiting new: %s', $self);
 	return $self;
 }
@@ -434,7 +433,7 @@ sub get_queue {
 		'name' => $get_queue_name,
 		'connection' => $connection,
 	});
-	$log->infof('Created a new IO::Iron::IronMQ::Queue object (queue id=%s; name=%s.', $get_queue_id, $get_queue_name);
+	$log->debugf('Created a new IO::Iron::IronMQ::Queue object (queue id=%s; name=%s.', $get_queue_id, $get_queue_name);
 	$log->tracef('Exiting get_queue: %s', $queue);
 	return $queue;
 }
@@ -481,7 +480,7 @@ sub create_queue {
 		'name' => $get_queue_name,
 		'connection' => $connection,
 	});
-	$log->infof('Created a new IO::Iron::IronMQ::Queue object (queue id=%s; queue name=%s).', $get_queue_id, $get_queue_name);
+	$log->debugf('Created a new IO::Iron::IronMQ::Queue object (queue id=%s; queue name=%s).', $get_queue_id, $get_queue_name);
 	$log->tracef('Exiting get_queue: %s', $queue);
 	return $queue;
 }
@@ -515,7 +514,7 @@ sub delete_queue {
 			}
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
-	$log->infof('Deleted queue (queue name=%s.', $queue_name);
+	$log->debugf('Deleted queue (queue name=%s.', $queue_name);
 	$log->tracef('Exiting delete_queue: %d', 1);
 	return 1;
 }
@@ -604,7 +603,7 @@ sub get_info_about_queue {
 	$self->{'last_http_status_code'} = $http_status_code;
 	my $info = $response_message;
 	# {"id":"51be[...]","name":"Log_Test_Queue","size":0,"total_messages":3,"project_id":"51bd[...]"}
-	$log->infof('Returned info about queue %s.', $queue_name);
+	$log->debugf('Returned info about queue %s.', $queue_name);
 	$log->tracef('Exiting get_info_about_queue: %s', $info);
 	return $info;
 }

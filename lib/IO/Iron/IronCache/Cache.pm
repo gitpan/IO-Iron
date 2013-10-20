@@ -18,15 +18,15 @@ END {
 
 =head1 NAME
 
-IO::Iron::IronCache::Cache
+IO::Iron::IronCache::Cache - IronCache (Online Item-Value Storage) Client (Cache).
 
 =head1 VERSION
 
-Version 0.01_03
+Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_03';
+our $VERSION = '0.01_04';
 
 
 =head1 SYNOPSIS
@@ -39,7 +39,6 @@ Please see IO::Iron::IronCache::Client for usage.
 
 use Log::Any  qw($log);
 use JSON;
-use utf8;
 use Hash::Util qw{lock_keys unlock_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';
@@ -143,7 +142,6 @@ sub clear {
 			}
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
-	$log->infof('Cleared IronCache (cache name=%s.', $cache_name);
 
 	$log->tracef('Exiting clear: %d', 1);
 	return 1;
@@ -186,7 +184,6 @@ sub put {
 			}
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
-	$log->infof('Put item into IronCache (cache name=%s; item_key=%s; item_value=%s).', $cache_name, $key, $item->value());
 
 	$log->tracef('Exiting put: %d', 1);
 	return 1;
@@ -226,7 +223,6 @@ sub increment {
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
 	my $new_value = $response_message->{'value'};
-	$log->infof('Incremented item in IronCache (cache name=%s; item_key=%s; new_value=%d).', $cache_name, $key, $new_value);
 
 	$log->tracef('Exiting increment: %d', $new_value);
 	return $new_value;
@@ -269,7 +265,6 @@ sub get {
 		'value' => $item_value,
 		'cas' => $item_cas,
 	});
-	$log->infof('Created a new item of IO::Iron::IronCache::Item (cache name=%s; item_key=%s; value=%s; cas=%s).', $cache_name, $item_key, $item_value, $item_cas);
 
 	$log->tracef('Exiting get: %s', $new_item);
 	return $new_item;
@@ -304,7 +299,6 @@ sub delete { ## no critic (Subroutines::ProhibitBuiltinHomonyms)
 			}
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
-	$log->infof('Deleted an item from IronCache (cache_name=%s; item_key=%s).', $cache_name, $key);
 
 	$log->tracef('Exiting delete: %d', 1);
 	return 1;

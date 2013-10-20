@@ -19,15 +19,15 @@ END {
 
 =head1 NAME
 
-IO::Iron::IronMQ::Queue
+IO::Iron::IronMQ::Queue - IronMQ (Message Queue) Client (Queue).
 
 =head1 VERSION
 
-Version 0.01_03
+Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_03';
+our $VERSION = '0.01_04';
 
 =head1 SYNOPSIS
 
@@ -38,7 +38,6 @@ Please see IO::Iron::IronMQ::Queue for usage.
 =cut
 
 use Log::Any qw($log);
-use utf8;
 use Hash::Util qw{lock_keys unlock_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';
@@ -188,7 +187,7 @@ sub push { ## no critic (Subroutines::ProhibitBuiltinHomonyms)
 	my ( @ids, $msg );
 	@ids = ( @{ $response_message->{'ids'} } );    # message ids.
 	$msg = $response_message->{'msg'};    # Should be "Messages put on queue."
-	$log->infof( 'Pushed IronMQ Message(s) (queue name=%s; message id(s)=%s).',
+	$log->debugf( 'Pushed IronMQ Message(s) (queue name=%s; message id(s)=%s).',
 		$self->{'name'}, ( join q{,}, @ids ) );
 	if (wantarray) {
 		$log->tracef( 'Exiting push: %s', ( join q{:}, @ids ) );
@@ -246,7 +245,7 @@ sub pull {
 	my $messages = $response_message->{'messages'};    # messages.
 	foreach ( @{$messages} ) {
 		my $msg = $_;
-		$log->infof( 'Pulled IronMQ Message (queue name=%s; message id=%s).',
+		$log->debugf( 'Pulled IronMQ Message (queue name=%s; message id=%s).',
 			$self->{'name'}, $msg->{'id'} );
 		my $message = IO::Iron::IronMQ::Message->new(
 			{
@@ -259,7 +258,7 @@ sub pull {
 		CORE::push @pulled_messages,
 		  $message;    # using CORE routine, not this class method.
 	}
-	$log->infof( 'Pulled %d IronMQ Messages (queue name=%s).',
+	$log->debugf( 'Pulled %d IronMQ Messages (queue name=%s).',
 		scalar @pulled_messages, $self->{'name'} );
 	$log->tracef( 'Exiting pull: %s',
 		@pulled_messages ? @pulled_messages : '[NONE]' );
@@ -301,7 +300,7 @@ sub peek {
 	my $messages = $response_message->{'messages'};    # messages.
 	foreach ( @{$messages} ) {
 		my $msg = $_;
-		$log->infof( 'peeked IronMQ Message (queue name=%s; message id=%s.',
+		$log->debugf( 'peeked IronMQ Message (queue name=%s; message id=%s.',
 			$self->{'name'}, $msg->{'id'} );
 		my $message = IO::Iron::IronMQ::Message->new(
 			{
@@ -351,7 +350,7 @@ sub delete { ## no critic (Subroutines::ProhibitBuiltinHomonyms)
 	$self->{'last_http_status_code'} = $http_status_code;
 
 	my $msg = $response_message->{'msg'};    # Should be 'Deleted'
-	$log->infof( 'Deleted IronMQ Message(s) (queue name=%s; message id(s)=%s.',
+	$log->debugf( 'Deleted IronMQ Message(s) (queue name=%s; message id(s)=%s.',
 		$queue_name, ( join q{,}, @message_ids ) );
 	if (wantarray) {
 		$log->tracef( 'Exiting push: %s', ( join q{:}, @message_ids ) );
@@ -402,7 +401,7 @@ sub release {
 		}
 	  );
 	$self->{'last_http_status_code'} = $http_status_code;
-	$log->infof(
+	$log->debugf(
 		'Released IronMQ Message(s) (queue name=%s; message id=%s; delay=%d)',
 		$queue_name, $msg_id, $msg_delay ? $msg_delay : 0 );
 
@@ -440,7 +439,7 @@ sub touch {
 		}
 	  );
 	$self->{'last_http_status_code'} = $http_status_code;
-	$log->infof( 'Touched IronMQ Message(s) (queue name=%s; message id(s)=%s.',
+	$log->debugf( 'Touched IronMQ Message(s) (queue name=%s; message id(s)=%s.',
 		$queue_name, $msg_id );
 
 	$log->tracef( 'Exiting touch: %s', 1 );
@@ -476,7 +475,7 @@ sub clear {
 	  );
 	$self->{'last_http_status_code'} = $http_status_code;
 	my $msg = $response_message->{'msg'};    # Should be 'Cleared'
-	$log->infof( 'Cleared IronMQ Message queue %s.', $queue_name );
+	$log->debugf( 'Cleared IronMQ Message queue %s.', $queue_name );
 
 	$log->tracef( 'Exiting clear: %s', 1 );
 	return 1;
@@ -506,7 +505,7 @@ sub size {
 		{ '{Queue Name}' => $queue_name, } );
 	$self->{'last_http_status_code'} = $http_status_code;
 	my $size = $response_message->{'size'};
-	$log->infof( 'Queue size is %s.', $size );
+	$log->debugf( 'Queue size is %s.', $size );
 
 	$log->tracef( 'Exiting size(): %s', $size );
 	return $size;
