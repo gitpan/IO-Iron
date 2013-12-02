@@ -13,24 +13,29 @@ lib/IO/Iron/IronMQ/Api.pm
 lib/IO/Iron/IronMQ/Client.pm
 lib/IO/Iron/IronMQ/Message.pm
 lib/IO/Iron/IronMQ/Queue.pm
+lib/IO/Iron/IronWorker/Api.pm
+lib/IO/Iron/IronWorker/Client.pm
+Makefile.PL
 MANIFEST
 perlcriticrc
 README
 t/boilerplate.t
 t/common.pm
-t/pod-coverage.t
-t/pod.t
-t/Iron/00-load.t
+t/Iron/00_load.t
+t/Iron/02_client_readconfig.t
 t/Iron/02_iron_all.t
-t/IronCache/00-load.t
+t/IronCache/00_load.t
 t/IronCache/01_cache.t
-t/IronMQ/00-load.t
+t/IronMQ/00_load.t
 t/IronMQ/02_client_all.t
 t/IronMQ/02_client_create_queue.t
 t/IronMQ/02_client_exceptions.t
 t/IronMQ/02_queue_all.t
 t/IronMQ/02_queue_pull.t
 t/IronMQ/02_queue_push.t
-Makefile.PL
+t/IronWorker/00_load.t
+t/IronWorker/02_client_code_package.t
+t/pod-coverage.t
+t/pod.t
 META.yml                                 Module YAML meta-data (added by MakeMaker)
 META.json                                Module JSON meta-data (added by MakeMaker)

@@ -29,7 +29,7 @@ Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_04';
+our $VERSION = '0.02';
 
 
 =head1 SYNOPSIS
@@ -40,12 +40,14 @@ This package is for internal use of IO::Iron packages.
 
 use Log::Any  qw{$log};
 use JSON qw{encode_json decode_json};
+use Data::UUID ();
+use MIME::Base64 ();
 use Hash::Util qw{lock_keys lock_keys_plus unlock_keys legal_keys};
 use Carp::Assert;
 use Carp::Assert::More;
 use Carp;
 use English '-no_match_vars';
-use REST::Client;
+use REST::Client ();
 use URI::Escape qw{uri_escape_utf8};
 use Try::Tiny;
 use Scalar::Util qw{blessed};
@@ -86,6 +88,7 @@ sub new {
 	# Add more keys to the self hash.
 	my @self_keys = (
 			'client',        # REST client timeout (for REST calls accessing Iron services).
+			'mime_boundary', # The boundary string separating parts in multipart REST messages.
 			legal_keys(%{$self}),
 	);
 	unlock_keys(%{$self});
@@ -95,6 +98,12 @@ sub new {
 	# Set up REST client
 	my $client = REST::Client->new();
 	$self->{'client'} = $client;
+
+	# Create MIME multipart message boundary string
+	my $ug                   = Data::UUID->new();
+	my $uuid1                = $ug->create();
+	$self->{'mime_boundary'} = 'MIME_BOUNDARY_' . (substr $ug->to_string($uuid1), 1, 20); ## no critic (ValuesAndExpressions::ProhibitMagicNumbers)
+
 	$log->infof('Iron Connector created with REST::Client as HTTP user agent.');
 	$log->tracef('Exiting new: %s', $self);
 	return $self;
@@ -122,6 +131,7 @@ sub perform_iron_action { ## no critic (Subroutines::ProhibitExcessComplexity)
 
 	my $href = $iron_action->{'href'};
 	my $action_verb = $iron_action->{'action'};
+	my $return_type = $iron_action->{'return'};
 	my $retry = $iron_action->{'retry'};
 	my $require_body = $iron_action->{'require_body'};
 	my $paged = $iron_action->{'paged'} ? $iron_action->{'paged'} : 0;
@@ -139,6 +149,9 @@ sub perform_iron_action { ## no critic (Subroutines::ProhibitExcessComplexity)
 	if ($url_params) {
 		$href .= (q{?} . $url_params);
 	}
+	my $content_type = $iron_action->{'content_type'};
+	$params->{'content_type'} = $content_type;
+	$params->{'return_type'} = $return_type;
 	$log->tracef('href before value substitution:\'%s\'.', $href);
 	foreach my $value_key (sort keys %{$params}) {
 		my $value = $params->{$value_key};
@@ -182,8 +195,12 @@ sub perform_iron_action { ## no critic (Subroutines::ProhibitExcessComplexity)
 					$page_href .= ($href =~ /\?/gsx ? q{&} : q{?}) . 'per_page='.$per_page.'&page='.$page_number;
 					($http_status_code_temp, $returned_msg_temp) =
 						$self->perform_http_action($action_verb, $page_href, $params);
-					push @returned_msgs, @{$returned_msg_temp};
-					if( scalar @{$returned_msg_temp} == 0 || @{$returned_msg_temp} < $per_page ) {
+					my $return_list = $returned_msg_temp;
+					my ($return_type_def, $list_hash_key) = (split m/:/s, $return_type);
+					$return_list = $returned_msg_temp->{$list_hash_key}
+						if $return_type_def eq 'LIST' && defined $list_hash_key; ## no critic (ControlStructures::ProhibitPostfixControls)
+					push @returned_msgs, @{$return_list};
+					if( scalar @{$return_list} == 0 || @{$return_list} < $per_page ) {
 						last;
 					}
 					$page_number++;
@@ -237,28 +254,71 @@ sub perform_http_action {
 	$log->tracef('Entering Connector:perform_http_action(%s, %s, %s)', $action_verb, $href, $params);
 	#
 	# HTTP request attributes
-	my $body_content = $params->{'body'} ? $params->{'body'} : { }; # Else use an empty hash for body.
-	my $encoded_body_content = encode_json($body_content);
 	my $timeout = $params->{'http_client_timeout'};
+	my $request_body;
 	# Headers
-	my $content_type = 'application/json';
+	my $content_type = $params->{'content_type'} ? $params->{'content_type'} : 'application/json';
 	my $authorization = 'OAuth ' . $params->{'authorization_token'};
 	#
+	if($content_type =~ /multipart/is) {
+		my $body_content = $params->{'body'} ? $params->{'body'} : { }; # Else use an empty hash for body.
+		my $file_as_zip = $params->{'body'}->{'file'};
+		delete $params->{'body'}->{'file'};
+		my $encoded_body_content = encode_json($body_content);
+		# Assert $params->{'file'}
+		# Assert $params->{'file_name'}
+		# Assert $params->{'file_name'} ends with ".zip"
+		my $boundary = $self->{'mime_boundary'};
+		$content_type = "multipart/form-data; boundary=$boundary";
+		my $file_name = $params->{'body'}->{'file_name'} . '.zip';
+		#$request_body = 'MIME-Version: 1.0' . "\n";
+		#$request_body .= 'Content-Length: ' . $req_content_length . "\n";
+		#$request_body .= 'Content-Type: ' . $req_content_type . "\n";
+		$request_body = q{--} . $boundary . "\n";
+		$request_body .= 'Content-Disposition: ' . 'form-data; name="data"' . "\n";
+		$request_body .= 'Content-Type: ' . 'text/plain; charset=utf-8' . "\n";
+		$request_body .= "\n";
+		$request_body .= $encoded_body_content . "\n";
+		$request_body .= "\n";
+		$request_body .= q{--} . $boundary . "\n";
+		$request_body .= 'Content-Disposition: ' . 'form-data; name="file"; filename="' . $file_name . q{"} . "\n";
+		$request_body .= 'Content-Type: ' . 'application/zip' . "\n";
+		$request_body .= 'Content-Transfer-Encoding: base64' . "\n";
+		$request_body .= "\n";
+		$request_body .= MIME::Base64::encode($file_as_zip) . "\n";
+		$request_body .= q{--} . $boundary . q{--} . "\n";
+	}
+	else {
+		my $body_content = $params->{'body'} ? $params->{'body'} : { }; # Else use an empty hash for body.
+		my $encoded_body_content = encode_json($body_content);
+		$request_body = $encoded_body_content;
+	}
 	$client->setTimeout($timeout);
 	$log->tracef('client: %s; action=%s; href=%s;', $client, $action_verb, $href);
-	$log->debugf('REST Request: [verb=%s; href=%s; body=%s; Headers: Content-Type=%s; Authorization=%s]', $action_verb, $href, $encoded_body_content, $content_type, $authorization);
-	$client->request($action_verb, $href, $encoded_body_content,
+	$log->debugf('REST Request: [verb=%s; href=%s; body=%s; Headers: Content-Type=%s; Authorization=%s]', $action_verb, $href, $request_body, $content_type, $authorization);
+	$client->request($action_verb, $href, $request_body,
 			{
 				'Content-Type' => $content_type,
 				'Authorization' => $authorization,
 			});
-	#
+	# RETURN:
 	$log->debugf('Returned HTTP response code:%s', $client->responseCode());
+	#use Data::Dumper;
+	#$log->tracef('Returned HTTP ALL:%s', Dumper($client));
+	#$log->tracef('Returned HTTP response headers:%s', Dumper($client->responseHeaders()));
 	$log->tracef('Returned HTTP response:%s', $client->responseContent());
 	if( $client->responseCode() >= HTTP_CODE_OK_MIN() && $client->responseCode() <= HTTP_CODE_OK_MAX() ) {
 		# 200 OK: Successful GET; 201 Created: Successful POST
 		$log->tracef('HTTP Response code: %d, %s', $client->responseCode(), 'Successful!');
-		my $decoded_body_content = decode_json( $client->responseContent() );
+		my $decoded_body_content;
+		if(defined $params->{'return_type'} && $params->{'return_type'} eq 'BINARY') {
+			$log->tracef('Returned HTTP response header Content-Disposition:%s', $client->responseHeader('Content-Disposition'));
+			#my ($filename) = $client->responseHeader ('Content-Disposition') =~ /filename=TESTWORKER_6059683-6C03_2.zip/;
+			$decoded_body_content = { 'file' => MIME::Base64::decode( $client->responseContent() ) };
+		}
+		else {
+			$decoded_body_content = decode_json( $client->responseContent() );
+		}
 		$log->tracef('Exiting Connector:perform_http_action(): %s, %s', $client->responseCode(), $decoded_body_content );
 		return $client->responseCode(), $decoded_body_content;
 	}
@@ -287,7 +347,7 @@ Mikko Koivunalho, C<< <mikko.koivunalho at iki.fi> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-net-ironmq at rt.cpan.org>, or through
+Please report any bugs or feature requests to C<bug-io-iron at rt.cpan.org>, or through
 the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=IO-Iron>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 

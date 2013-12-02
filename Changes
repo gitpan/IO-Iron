@@ -1,4 +1,8 @@
-Revision history for Net-IronMQ
+Revision history for IO-Iron
+
+0.02    2013-Dec-01
+        First public release.
+        IronWorker code package handling added. Other IronWorker stuff still missing.
 
 0.01_04 2013-Oct-20
         Developer release. Working IronMQ Client.

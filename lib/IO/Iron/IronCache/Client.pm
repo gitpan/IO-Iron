@@ -26,7 +26,7 @@ Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_04';
+our $VERSION = '0.02';
 
 
 =head1 SYNOPSIS
@@ -107,17 +107,13 @@ or as parameters when creating the object.
 
 =cut
 
-use File::Slurp qw{read_file};
 use Log::Any  qw{$log};
-use JSON;
-use File::Spec qw{read_file};
-use File::HomeDir;
 use Hash::Util qw{lock_keys lock_keys_plus unlock_keys legal_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';
 
-use IO::Iron::IronCache::Api;
-use IO::Iron::Common;
+require IO::Iron::IronCache::Api;
+require IO::Iron::Common;
 require IO::Iron::Connection;
 require IO::Iron::IronCache::Cache;
 
@@ -586,7 +582,7 @@ Mikko Koivunalho, C<< <mikko.koivunalho at iki.fi> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-net-ironmq at rt.cpan.org>, or through
+Please report any bugs or feature requests to C<bug-io-iron at rt.cpan.org>, or through
 the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=IO-Iron>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 

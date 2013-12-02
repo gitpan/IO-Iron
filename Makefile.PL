@@ -17,16 +17,19 @@ WriteMakefile(
 	BUILD_REQUIRES => {
 		'Test::More' => 0,
 		'Log::Any::Test' => 0.15,
-		'use Data::UUID' => 1.219,
 		'File::Remove' => 1.52,
 		'File::Copy' => 2.21,
 		'YAML::Tiny' => 1.51,
 		'Test::Exception' => 0.31,
-	},  # FIXME Test::Manifest? Do we need it?
+		'IO::Compress::Zip' => 2.060,
+		'IO::Uncompress::Unzip' => 2.060,
+	},  # FIXME Test::Manifest? Do we need it? looks in the t/test_manifest file to find out which tests you want to run and the order in which you want to run them.
 	PREREQ_PM => {
 		'Log::Any' => 0.15,
 		'File::Slurp' => 9999.19,
 		'JSON' => 2.53,
+		'use Data::UUID' => 1.219,
+		'MIME::Base64' => 3.13,
 		'File::Spec' => 0, # Core
 		'Hash::Util' => 0, # Core
 		'Carp::Assert' => 0.20,
@@ -41,5 +44,5 @@ WriteMakefile(
 		'URI::Escape' => 3.31,
 	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-	clean => { FILES => 'Net-IronMQ-*' },
+	clean => { FILES => 'IO-Iron-*' },
 );

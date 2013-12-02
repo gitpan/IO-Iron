@@ -4,6 +4,7 @@ use strict;
 use warnings FATAL => 'all';
 use Test::More;
 use Test::Exception;
+use Encode;
 
 use lib 't';
 use common;
@@ -30,9 +31,11 @@ subtest 'Setup for testing' => sub {
 	$iron_mq_client = IO::Iron::IronMQ::Client->new( {} );
 	
 	# Create a new queue names.
-	$unique_queue_name_01 = common::create_unique_queue_name();
-	$unique_queue_name_02 = common::create_unique_queue_name();
-	$unique_queue_name_03 = common::create_unique_queue_name();
+	{ use utf8;
+		$unique_queue_name_01 = common::create_unique_queue_name() . '_latin1';
+		$unique_queue_name_02 = common::create_unique_queue_name() . '_räksmörgås';
+		$unique_queue_name_03 = common::create_unique_queue_name() . '_三明治';
+	}
 	is(1,1, 'ok');
 };
 
@@ -45,13 +48,13 @@ subtest 'Create the queues' => sub {
 	$created_iron_mq_queue_03 = $iron_mq_client->create_queue($unique_queue_name_03);
 	isa_ok($created_iron_mq_queue_01, "IO::Iron::IronMQ::Queue", "create_queue returns a IO::Iron::IronMQ::Queue.");
 	is($created_iron_mq_queue_01->name(), $unique_queue_name_01, "Created queue has the given name.");
-	diag("Created message queue " . $unique_queue_name_01 . ".");
+	diag("Created message queue " . encode_utf8($unique_queue_name_01) . ".");
 	isa_ok($created_iron_mq_queue_02, "IO::Iron::IronMQ::Queue", "create_queue returns a IO::Iron::IronMQ::Queue.");
 	is($created_iron_mq_queue_02->name(), $unique_queue_name_02, "Created queue has the given name.");
-	diag("Created message queue " . $unique_queue_name_02 . ".");
+	diag("Created message queue " . encode_utf8($unique_queue_name_02) . ".");
 	isa_ok($created_iron_mq_queue_03, "IO::Iron::IronMQ::Queue", "create_queue returns a IO::Iron::IronMQ::Queue.");
 	is($created_iron_mq_queue_03->name(), $unique_queue_name_03, "Created queue has the given name.");
-	diag("Created message queue " . $unique_queue_name_03 . ".");
+	diag("Created message queue " . encode_utf8($unique_queue_name_03) . ".");
 };
 
 subtest 'Query the queues' => sub {
@@ -63,18 +66,18 @@ subtest 'Query the queues' => sub {
 	my $queried_iron_mq_queue_info_01 = $iron_mq_client->get_info_about_queue($unique_queue_name_01);
 	#is($queried_iron_mq_queue_01->size(), $queried_iron_mq_queue_info_01->{'size'}, "Queried queue size matches with queried info.");
 	
-	diag("Queried message queue " . $unique_queue_name_01 . ".");
+	diag("Queried message queue " . encode_utf8($unique_queue_name_01) . ".");
 	my $queried_iron_mq_queue_02 = $iron_mq_client->get_queue($unique_queue_name_02);
 	isa_ok($queried_iron_mq_queue_02 , "IO::Iron::IronMQ::Queue", "create_queue returns a IO::Iron::IronMQ::Queue.");
 	#is($queried_iron_mq_queue_02->size(), 0, "Queried queue size is 0.");
 	my $queried_iron_mq_queue_info_02 = $iron_mq_client->get_info_about_queue($unique_queue_name_02);
 	#is($queried_iron_mq_queue_02->size(), $queried_iron_mq_queue_info_02->{'size'}, "Queried queue size matches with queried info.");
 	
-	diag("Queried message queue " . $unique_queue_name_02 . ".");
+	diag("Queried message queue " . encode_utf8($unique_queue_name_02) . ".");
 	my $queried_iron_mq_queue_03 = $iron_mq_client->get_queue($unique_queue_name_03);
 	isa_ok($queried_iron_mq_queue_03 , "IO::Iron::IronMQ::Queue", "create_queue returns a IO::Iron::IronMQ::Queue.");
 	#is($queried_iron_mq_queue_03->size(), 0, "Queried queue size is 0.");
-	diag("Queried message queue " . $unique_queue_name_03 . ".");
+	diag("Queried message queue " . encode_utf8($unique_queue_name_03) . ".");
 	my $queried_iron_mq_queue_info_03 = $iron_mq_client->get_info_about_queue($unique_queue_name_03);
 	#is($queried_iron_mq_queue_03->size(), $queried_iron_mq_queue_info_03->{'size'}, "Queried queue size matches with queried info.");
 	
@@ -101,19 +104,19 @@ subtest 'Clean up.' => sub {
 		my $dummy = $iron_mq_client->get_queue($unique_queue_name_01);
 	} '/IronHTTPCallException: status_code=404 response_message=Queue not found/', 
 			'Throw IO::Iron::IronMQ::Exceptions::HTTPException when no message queue of given name.';
-	diag("Deleted message queue " . $created_iron_mq_queue_01->name() . ".");
+	diag("Deleted message queue " . encode_utf8($created_iron_mq_queue_01->name()) . ".");
 	my $delete_queue_ret_02 = $iron_mq_client->delete_queue($unique_queue_name_02);
 	is($delete_queue_ret_02, 1, "Queue is deleted.");
 	throws_ok {
 		my $dummy = $iron_mq_client->get_queue($unique_queue_name_02);
 	} '/IronHTTPCallException: status_code=404 response_message=Queue not found/', 
 			'Throw IO::Iron::IronMQ::Exceptions::HTTPException when no message queue of given name.';
-	diag("Deleted message queue " . $created_iron_mq_queue_02->name() . ".");
+	diag("Deleted message queue " . encode_utf8($created_iron_mq_queue_02->name()) . ".");
 	my $delete_queue_ret_03 = $iron_mq_client->delete_queue($unique_queue_name_03);
 	is($delete_queue_ret_03, 1, "Queue is deleted.");
 	throws_ok {
 		my $dummy = $iron_mq_client->get_queue($unique_queue_name_03);
 	} '/IronHTTPCallException: status_code=404 response_message=Queue not found/', 
 			'Throw IO::Iron::IronMQ::Exceptions::HTTPException when no message queue of given name.';
-	diag("Deleted message queue " . $created_iron_mq_queue_03->name() . ".");
+	diag("Deleted message queue " . encode_utf8($created_iron_mq_queue_03->name()) . ".");
 };

@@ -27,4 +27,13 @@ sub create_unique_cache_name {
     return $unique_cache_name;
 }
 
+sub create_unique_code_package_name {
+	my $ug                = Data::UUID->new();
+	my $uuid1             = $ug->create();
+	my $unique_code_package_name =
+	  'TESTWORKER_' . substr($ug->to_string($uuid1), 1, 12);
+
+    return $unique_code_package_name;
+}
+
 1;

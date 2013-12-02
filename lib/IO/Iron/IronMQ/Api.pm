@@ -26,7 +26,7 @@ Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_04';
+our $VERSION = '0.02';
 
 
 =head1 SYNOPSIS
@@ -267,8 +267,8 @@ Mikko Koivunalho, C<< <mikko.koivunalho at iki.fi> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-net-ironmq at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Net-IronMQ>.  I will be notified, and then you'll
+Please report any bugs or feature requests to C<bug-io-iron at rt.cpan.org>, or through
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=IO-Iron>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 
@@ -285,19 +285,19 @@ You can also look for information at:
 
 =item * RT: CPAN's request tracker (report bugs here)
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Net-IronMQ>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=IO-Iron>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/Net-IronMQ>
+L<http://annocpan.org/dist/IO-Iron>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/Net-IronMQ>
+L<http://cpanratings.perl.org/d/IO-Iron>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/Net-IronMQ/>
+L<http://search.cpan.org/dist/IO-Iron/>
 
 =back
 

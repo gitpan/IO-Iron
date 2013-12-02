@@ -24,6 +24,8 @@
          "requires" : {
             "File::Copy" : "2.21",
             "File::Remove" : "1.52",
+            "IO::Compress::Zip" : "2.06",
+            "IO::Uncompress::Unzip" : "2.06",
             "Log::Any::Test" : "0.15",
             "Test::Exception" : "0.31",
             "Test::More" : "0",
@@ -48,6 +50,7 @@
             "Hash::Util" : "0",
             "JSON" : "2.53",
             "Log::Any" : "0.15",
+            "MIME::Base64" : "3.13",
             "REST::Client" : "88",
             "Scalar::Util" : "1.27",
             "Try::Tiny" : "0.18",
@@ -56,6 +59,6 @@
          }
       }
    },
-   "release_status" : "testing",
-   "version" : "0.01_04"
+   "release_status" : "stable",
+   "version" : "0.02"
 }

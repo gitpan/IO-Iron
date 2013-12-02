@@ -26,18 +26,18 @@ Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_04';
+our $VERSION = '0.02';
 
 
 =head1 REQUIREMENTS
 
 =cut
 
-use File::Slurp qw{read_file};
+use File::Slurp ();
 use Log::Any  qw{$log};
-use JSON;
-use File::Spec qw{read_file};
-use File::HomeDir;
+use JSON ();
+#use File::Spec qw{read_file};
+use File::HomeDir ();
 use Hash::Util qw{lock_keys unlock_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';
@@ -79,7 +79,7 @@ Return: ref to %config.
 sub get_config {
 	my ($params) = @_;
 	$log->tracef('Entering get_config(%s)', $params);
-	my $config = { 'project_id' => undef, 'token' => undef, 'host' => undef, 'protocol' => undef, 'port' => undef, 'api_version' => undef, 'timeout' => undef };
+	my $config = { 'project_id' => undef, 'token' => undef, 'host' => undef, 'host_path_prefix' => undef, 'protocol' => undef, 'port' => undef, 'api_version' => undef, 'timeout' => undef };
 	my @config_keys = ( ## no critic (CodeLayout::ProhibitQuotedWordLists)
 			'project_id',  # The ID of the project to use for requests.
 			'token',       # The OAuth token that should be used to authenticate requests. Can be found in the HUD.
@@ -146,9 +146,9 @@ sub _read_iron_config_file {
 	my $rval;
 	if( -e $full_path_name) {
 		$log->tracef('File %s exists', $full_path_name);
-		if(my $file_contents = read_file($full_path_name)) { # File::Slurp
+		if(my $file_contents = File::Slurp::read_file($full_path_name)) {
 			$log->tracef('Read file %s', $full_path_name);
-			$read_config = decode_json($file_contents); #JSON
+			$read_config = JSON::decode_json($file_contents);
 			foreach my $config_key (keys %{$config}) {
 				if (defined $read_config->{$config_key}) {
 					$config->{$config_key} = $read_config->{$config_key};
@@ -177,7 +177,7 @@ Mikko Koivunalho, C<< <mikko.koivunalho at iki.fi> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-net-ironmq at rt.cpan.org>, or through
+Please report any bugs or feature requests to C<bug-io-iron at rt.cpan.org>, or through
 the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=IO-Iron>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 

@@ -27,7 +27,7 @@ Version 0.01_04
 
 =cut
 
-our $VERSION = '0.01_04';
+our $VERSION = '0.02';
 
 
 =head1 SYNOPSIS
@@ -137,6 +137,7 @@ sub perform_iron_action {
 	my $per_page = $iron_action->{'per_page'} ? $iron_action->{'per_page'} : 0;
 	my $log_message = $iron_action->{'log_message'} ? $iron_action->{'log_message'} : q{};
 	my $request_fields = $iron_action->{'request_fields'} ? $iron_action->{'request_fields'} : {};
+	my $content_type = $iron_action->{'content_type'};
 
 	$params->{'{Protocol}'} = $self->{'protocol'};
 	$params->{'{Port}'} = $self->{'port'};
@@ -146,6 +147,7 @@ sub perform_iron_action {
 	$params->{'{Api Version}'} = $self->{'api_version'};
 	$params->{'authorization_token'} = $self->{'token'};
 	$params->{'http_client_timeout'} = $self->{'timeout'};
+	$params->{'content_type'} = $content_type;
 
 	my $connector = $self->{'connector'};
 	my ($http_status_code, $returned_msg) = $connector->perform_iron_action($iron_action, $params);
@@ -157,7 +159,7 @@ sub perform_iron_action {
 	};
 	foreach my $key (sort keys %{$request_fields}) {
 		my $field_name = $request_fields->{$key};
-		my $field_value = $params->{'body'}->{$key} ? $params->{'body'}->{$key} : '';
+		my $field_value = $params->{'body'}->{$key} ? $params->{'body'}->{$key} : q{};
 		$log_message =~ s/$field_name/$field_value/gs; ## no critic (RegularExpressions::RequireExtendedFormatting)
 	};
 	$log->info($log_message);
@@ -195,7 +197,7 @@ Mikko Koivunalho, C<< <mikko.koivunalho at iki.fi> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-net-ironmq at rt.cpan.org>, or through
+Please report any bugs or feature requests to C<bug-io-iron at rt.cpan.org>, or through
 the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=IO-Iron>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
