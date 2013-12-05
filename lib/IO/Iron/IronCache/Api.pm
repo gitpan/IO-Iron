@@ -22,11 +22,11 @@ IO::Iron::IronCache::Api - IronCache API reference for Perl Client Libraries!
 
 =head1 VERSION
 
-Version 0.01_04
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 
 =head1 SYNOPSIS
@@ -47,6 +47,8 @@ The APIs to IronCache REST services.
 
 =head3 IRONCACHE_LIST_CACHES
 
+/projects/{Project ID}/caches
+
 =cut
 
 sub IRONCACHE_LIST_CACHES {
@@ -66,6 +68,8 @@ sub IRONCACHE_LIST_CACHES {
 
 =head3 IRONCACHE_GET_INFO_ABOUT_A_CACHE
 
+/projects/{Project ID}/caches/{Cache Name}
+
 =cut
 
 sub IRONCACHE_GET_INFO_ABOUT_A_CACHE {
@@ -82,6 +86,8 @@ sub IRONCACHE_GET_INFO_ABOUT_A_CACHE {
 }
 
 =head3 IRONCACHE_DELETE_A_CACHE
+
+/projects/{Project ID}/caches/{Cache Name}
 
 =cut
 
@@ -102,6 +108,8 @@ sub IRONCACHE_DELETE_A_CACHE {
 
 =head3 IRONCACHE_CLEAR_A_CACHE
 
+/projects/{Project ID}/caches/{Cache Name}/clear
+
 =cut
 
 sub IRONCACHE_CLEAR_A_CACHE {
@@ -120,6 +128,8 @@ sub IRONCACHE_CLEAR_A_CACHE {
 }
 
 =head3 IRONCACHE_PUT_AN_ITEM_INTO_A_CACHE
+
+/projects/{Project ID}/caches/{Cache Name}/items/{Key}
 
 =cut
 
@@ -141,6 +151,8 @@ sub IRONCACHE_PUT_AN_ITEM_INTO_A_CACHE {
 
 =head3 IRONCACHE_INCREMENT_AN_ITEMS_VALUE
 
+/projects/{Project ID}/caches/{Cache Name}/items/{Key}/increment
+
 =cut
 
 sub IRONCACHE_INCREMENT_AN_ITEMS_VALUE {
@@ -161,6 +173,8 @@ sub IRONCACHE_INCREMENT_AN_ITEMS_VALUE {
 
 =head3 IRONCACHE_GET_AN_ITEM_FROM_A_CACHE
 
+/projects/{Project ID}/caches/{Cache Name}/items/{Key}
+
 =cut
 
 sub IRONCACHE_GET_AN_ITEM_FROM_A_CACHE {
@@ -177,6 +191,8 @@ sub IRONCACHE_GET_AN_ITEM_FROM_A_CACHE {
 }
 
 =head3 IRONCACHE_DELETE_AN_ITEM_FROM_A_CACHE
+
+/projects/{Project ID}/caches/{Cache Name}/items/{Key}
 
 =cut
 
@@ -236,7 +252,7 @@ L<http://search.cpan.org/dist/IO-IronMQ/>
 =back
 
 
-=head1 ACKNOWLEDGEMENTS
+=head1 ACKNOWLEDGMENTS
 
 Cool idea, "message queue in the cloud": http://www.iron.io/.
 

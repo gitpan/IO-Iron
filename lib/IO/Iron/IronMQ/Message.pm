@@ -21,11 +21,11 @@ IO::Iron::IronMQ::Message - IronMQ (Message Queue) Client (Message).
 
 =head1 VERSION
 
-Version 0.01_04
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 
 =head1 SYNOPSIS
@@ -231,7 +231,7 @@ L<http://search.cpan.org/dist/IO-Iron/>
 =back
 
 
-=head1 ACKNOWLEDGEMENTS
+=head1 ACKNOWLEDGMENTS
 
 
 =head1 LICENSE AND COPYRIGHT

@@ -22,11 +22,11 @@ IO::Iron::IronMQ::Api - IronMQ API reference for Perl Client Libraries!
 
 =head1 VERSION
 
-Version 0.01_04
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 
 =head1 SYNOPSIS
@@ -43,6 +43,8 @@ This package is for internal use of IO::Iron::IronMQ::Client/Queue packages.
 =head2 Operate message queues
 
 =head3 IRONMQ_LIST_MESSAGE_QUEUES
+
+/projects/{Project ID}/queues
 
 =cut
 
@@ -63,6 +65,8 @@ sub IRONMQ_LIST_MESSAGE_QUEUES {
 
 =head3 IRONMQ_GET_INFO_ABOUT_A_MESSAGE_QUEUE
 
+/projects/{Project ID}/queues/{Queue Name}
+
 =cut
 
 sub IRONMQ_GET_INFO_ABOUT_A_MESSAGE_QUEUE {
@@ -79,6 +83,8 @@ sub IRONMQ_GET_INFO_ABOUT_A_MESSAGE_QUEUE {
 }
 
 =head3 IRONMQ_UPDATE_A_MESSAGE_QUEUE
+
+/projects/{Project ID}/queues/{Queue Name}
 
 =cut
 
@@ -98,6 +104,8 @@ sub IRONMQ_UPDATE_A_MESSAGE_QUEUE {
 
 =head3 IRONMQ_DELETE_A_MESSAGE_QUEUE
 
+/projects/{Project ID}/queues/{Queue Name}
+
 =cut
 
 sub IRONMQ_DELETE_A_MESSAGE_QUEUE {
@@ -114,6 +122,8 @@ sub IRONMQ_DELETE_A_MESSAGE_QUEUE {
 }
 
 =head3 IRONMQ_CLEAR_ALL_MESSAGES_FROM_A_QUEUE
+
+/projects/{Project ID}/queues/{Queue Name}/clear
 
 =cut
 
@@ -135,6 +145,8 @@ sub IRONMQ_CLEAR_ALL_MESSAGES_FROM_A_QUEUE {
 
 =head3 IRONMQ_ADD_MESSAGES_TO_A_QUEUE
 
+/projects/{Project ID}/queues/{Queue Name}/messages
+
 =cut
 
 sub IRONMQ_ADD_MESSAGES_TO_A_QUEUE {
@@ -152,6 +164,8 @@ sub IRONMQ_ADD_MESSAGES_TO_A_QUEUE {
 }
 
 =head3 IRONMQ_GET_MESSAGES_FROM_A_QUEUE
+
+/projects/{Project ID}/queues/{Queue Name}/messages
 
 =cut
 
@@ -171,6 +185,8 @@ sub IRONMQ_GET_MESSAGES_FROM_A_QUEUE {
 
 =head3 IRONMQ_PEEK_MESSAGES_ON_A_QUEUE
 
+/projects/{Project ID}/queues/{Queue Name}/messages/peek
+
 =cut
 
 sub IRONMQ_PEEK_MESSAGES_ON_A_QUEUE {
@@ -189,6 +205,8 @@ sub IRONMQ_PEEK_MESSAGES_ON_A_QUEUE {
 
 =head3 IRONMQ_DELETE_A_MESSAGE_FROM_A_QUEUE
 
+/projects/{Project ID}/queues/{Queue Name}/messages/{Message ID}
+
 =cut
 
 sub IRONMQ_DELETE_A_MESSAGE_FROM_A_QUEUE {
@@ -205,6 +223,8 @@ sub IRONMQ_DELETE_A_MESSAGE_FROM_A_QUEUE {
 }
 
 =head3 IRONMQ_DELETE_MULTIPLE_MESSAGES_FROM_A_QUEUE
+
+/projects/{Project ID}/queues/{Queue Name}/messages
 
 =cut
 
@@ -224,6 +244,8 @@ sub IRONMQ_DELETE_MULTIPLE_MESSAGES_FROM_A_QUEUE {
 
 =head3 IRONMQ_TOUCH_A_MESSAGE_ON_A_QUEUE
 
+/projects/{Project ID}/queues/{Queue Name}/messages/{Message ID}/touch
+
 =cut
 
 sub IRONMQ_TOUCH_A_MESSAGE_ON_A_QUEUE {
@@ -241,6 +263,8 @@ sub IRONMQ_TOUCH_A_MESSAGE_ON_A_QUEUE {
 }
 
 =head3 IRONMQ_RELEASE_A_MESSAGE_ON_A_QUEUE
+
+/projects/{Project ID}/queues/{Queue Name}/messages/{Message ID}/release
 
 =cut
 
@@ -302,7 +326,7 @@ L<http://search.cpan.org/dist/IO-Iron/>
 =back
 
 
-=head1 ACKNOWLEDGEMENTS
+=head1 ACKNOWLEDGMENTS
 
 Cool idea, "message queue in the cloud": http://www.iron.io/.
 

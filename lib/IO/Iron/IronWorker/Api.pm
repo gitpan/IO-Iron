@@ -22,11 +22,11 @@ IO::Iron::IronWorker::Api - IronWorker API reference for Perl Client Libraries!
 
 =head1 VERSION
 
-Version 0.01_04
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 
 =head1 SYNOPSIS
@@ -43,6 +43,8 @@ This package is for internal use of IO::Iron::IronWorker::Client/Queue packages.
 =head2 Code Packages
 
 =head3 IRONWORKER_LIST_CODE_PACKAGES
+
+/projects/{Project ID}/codes
 
 =cut
 
@@ -63,6 +65,8 @@ sub IRONWORKER_LIST_CODE_PACKAGES {
 
 =head3 IRONWORKER_UPLOAD_OR_UPDATE_A_CODE_PACKAGE
 
+/projects/{Project ID}/codes
+
 =cut
 
 sub IRONWORKER_UPLOAD_OR_UPDATE_A_CODE_PACKAGE {
@@ -82,6 +86,8 @@ sub IRONWORKER_UPLOAD_OR_UPDATE_A_CODE_PACKAGE {
 
 =head3 IRONWORKER_GET_INFO_ABOUT_A_CODE_PACKAGE
 
+/projects/{Project ID}/codes/{Code ID}
+
 =cut
 
 sub IRONWORKER_GET_INFO_ABOUT_A_CODE_PACKAGE {
@@ -98,6 +104,8 @@ sub IRONWORKER_GET_INFO_ABOUT_A_CODE_PACKAGE {
 }
 
 =head3 IRONWORKER_DELETE_A_CODE_PACKAGE
+
+/projects/{Project ID}/codes/{Code ID}
 
 =cut
 
@@ -116,6 +124,8 @@ sub IRONWORKER_DELETE_A_CODE_PACKAGE {
 
 =head3 IRONWORKER_DOWNLOAD_A_CODE_PACKAGE
 
+/projects/{Project ID}/codes/{Code ID}/download
+
 =cut
 
 sub IRONWORKER_DOWNLOAD_A_CODE_PACKAGE {
@@ -133,6 +143,8 @@ sub IRONWORKER_DOWNLOAD_A_CODE_PACKAGE {
 }
 
 =head3 IRONWORKER_LIST_CODE_PACKAGE_REVISIONS
+
+/projects/{Project ID}/codes/{Code ID}/revisions
 
 =cut
 
@@ -155,6 +167,8 @@ sub IRONWORKER_LIST_CODE_PACKAGE_REVISIONS {
 
 =head3 IRONWORKER_LIST_TASKS
 
+/projects/{Project ID}/tasks
+
 =cut
 
 sub IRONWORKER_LIST_TASKS {
@@ -175,6 +189,8 @@ sub IRONWORKER_LIST_TASKS {
 
 =head3 IRONWORKER_QUEUE_A_TASK
 
+/projects/{Project ID}/tasks
+
 =cut
 
 sub IRONWORKER_QUEUE_A_TASK {
@@ -192,6 +208,8 @@ sub IRONWORKER_QUEUE_A_TASK {
 }
 
 =head3 IRONWORKER_QUEUE_A_TASK_FROM_A_WEBHOOK
+
+/projects/{Project ID}/tasks/webhook
 
 =cut
 
@@ -213,6 +231,8 @@ sub IRONWORKER_QUEUE_A_TASK_FROM_A_WEBHOOK {
 
 =head3 IRONWORKER_GET_INFO_ABOUT_A_TASK
 
+/projects/{Project ID}/tasks/{Task ID}
+
 =cut
 
 sub IRONWORKER_GET_INFO_ABOUT_A_TASK {
@@ -228,15 +248,17 @@ sub IRONWORKER_GET_INFO_ABOUT_A_TASK {
 		};
 }
 
-=head3 	GET_A_TASKS_LOG
+=head3 	IRONWORKER_GET_A_TASKS_LOG
+
+/projects/{Project ID}/tasks/{Task ID}/log
 
 =cut
 
 # TODO GET_A_TASKS_LOG requires more work ('return' => 'PLAIN_TEXT')!
 
-sub GET_A_TASKS_LOG {
+sub IRONWORKER_GET_A_TASKS_LOG {
 	return {
-			'action_name'    => 'GET_A_TASKS_LOG',
+			'action_name'    => 'IRONWORKER_GET_A_TASKS_LOG',
 			'href'           => '{Protocol}://{Host}:{Port}{Host Path Prefix}/projects/{Project ID}/tasks/{Task ID}/log',
 			'action'         => 'GET',
 			'return'         => 'PLAIN_TEXT',
@@ -248,6 +270,8 @@ sub GET_A_TASKS_LOG {
 }
 
 =head3 IRONWORKER_SET_A_TASKS_PROGRESS
+
+/projects/{Project ID}/tasks/{Task ID}/progress
 
 =cut
 
@@ -266,6 +290,8 @@ sub IRONWORKER_SET_A_TASKS_PROGRESS {
 }
 
 =head3 IRONWORKER_RETRY_A_TASK
+
+/projects/{Project ID}/tasks/{Task ID}/retry
 
 =cut
 
@@ -287,6 +313,8 @@ sub IRONWORKER_RETRY_A_TASK {
 
 =head3 IRONWORKER_LIST_SCHEDULED_TASKS
 
+/projects/{Project ID}/schedules
+
 =cut
 
 sub IRONWORKER_LIST_SCHEDULED_TASKS {
@@ -305,6 +333,8 @@ sub IRONWORKER_LIST_SCHEDULED_TASKS {
 }
 
 =head3 IRONWORKER_SCHEDULE_A_TASK
+
+/projects/{Project ID}/tasks
 
 =cut
 
@@ -325,6 +355,8 @@ sub IRONWORKER_SCHEDULE_A_TASK {
 
 =head3 IRONWORKER_GET_INFO_ABOUT_A_SCHEDULED_TASK
 
+/projects/{Project ID}/schedules/{Schedule ID}
+
 =cut
 
 sub IRONWORKER_GET_INFO_ABOUT_A_SCHEDULED_TASK {
@@ -341,6 +373,8 @@ sub IRONWORKER_GET_INFO_ABOUT_A_SCHEDULED_TASK {
 }
 
 =head3 IRONWORKER_CANCEL_A_SCHEDULED_TASK
+
+/projects/{Project ID}/schedules/{Schedule ID}/cancel
 
 =cut
 
@@ -400,7 +434,7 @@ L<http://search.cpan.org/dist/IO-Iron/>
 =back
 
 
-=head1 ACKNOWLEDGEMENTS
+=head1 ACKNOWLEDGMENTS
 
 Cool idea, "message queue in the cloud": http://www.iron.io/.
 

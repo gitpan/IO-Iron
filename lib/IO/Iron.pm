@@ -26,11 +26,11 @@ IO::Iron - Client Libraries to Iron services IronCache, IronMQ and IronWorker.
 
 =head1 VERSION
 
-Version 0.01_04
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 SYNOPSIS
 
@@ -47,23 +47,29 @@ our $VERSION = '0.02';
 
 =head1 REQUIREMENTS
 
-The IO::Iron::* packages require the following modules:
+The IO::Iron::* packages require the following packages (in addition to Perl core packages):
 
 =over 8
 
-=item Log::Any, v. 0.15
+=item Carp::Assert', v. 0.20
+
+=item Carp::Assert::More, v. 1.12
+
+=item Data::UUID', v. 1.219,
+
+=item Exception::Class, v. 1.37
+
+=item File::HomeDir, v. 1.00,
 
 =item File::Slurp, v. 9999.19
 
 =item JSON, v. 2.53
 
-=item Carp::Assert::More, v. 1.12
+=item Log::Any, v. 0.15
+
+=item MIME::Base64', v. 3.13
 
 =item REST::Client, v. 88
-
-=item File::HomeDir, v. 1.00,
-
-=item Exception::Class, v. 1.37
 
 =item Try::Tiny, v. 0.18
 
@@ -73,42 +79,25 @@ The IO::Iron::* packages require the following modules:
 
 IO::Iron also requires an IronIO account. Three configuration items must 
 be set (others available) before using the functions: 
-'project_id', 'token' and 'host'. These can be set in a json file,
+C<project_id>, C<token> and C<host>. These can be set in a json file,
 as environmental variables or as parameters when creating the object.
 
 =over 8
 
-=item project_id, the identification string, from IronIO.
+=item C<project_id>, the identification string, from IronIO.
 
-=item token, an OAuth authentication token string, from IronIO.
+=item C<token>, an OAuth authentication token string, from IronIO.
 
-=item host, the cloud in which you want to operate: 'cache-aws-us-east-1' for AWS (Amazon).
+=item C<host>, the cloud in which you want to operate, e.g. 'cache-aws-us-east-1' for AWS (Amazon).
 
 =back
 
 =cut
 
-# Perl Core
-use File::Spec qw{read_file};
-use Hash::Util qw{lock_keys unlock_keys};
-use Scalar::Util;
-use English '-no_match_vars';
-
-# Others
-use File::Slurp qw{read_file};
-use Log::Any qw{$log};
-use JSON;
-use File::HomeDir;
-use Carp::Assert::More;
-use Carp;
-use REST::Client;
-use URI::Escape;
-use Exception::Class;
-use Try::Tiny;
 
 require IO::Iron::IronCache::Client;
 require IO::Iron::IronMQ::Client;
-#require IO::Iron::IronWorker::Client;
+require IO::Iron::IronWorker::Client;
 
 
 =head1 DESCRIPTION
@@ -144,29 +133,29 @@ parameters. See section L<SYNOPSIS|/#SYNOPSIS> for an example.
 
 =over 8
 
-=item project_id,        The ID of the project to use for requests.
+=item C<project_id>,        The ID of the project to use for requests.
 
-=item token,             The OAuth token that is used to authenticate requests.
+=item C<token>,             The OAuth token that is used to authenticate requests.
 
-=item host,              The domain name the API can be located at. E.g. 'mq-aws-us-east-1.iron.io/1'.
+=item C<host>,              The domain name the API can be located at. E.g. 'mq-aws-us-east-1.iron.io/1'.
 
-=item protocol,          The protocol that will be used to communicate with the API. Defaults to "https".
+=item C<protocol>,          The protocol that will be used to communicate with the API. Defaults to "https".
 
-=item port,              The port to connect to the API through. Defaults to 443.
+=item C<port>,              The port to connect to the API through. Defaults to 443.
 
-=item api_version,       The version of the API to connect through. Defaults to the version supported by the client.
+=item C<api_version>,       The version of the API to connect through. Defaults to the version supported by the client.
 
-=item host_path_prefix,  Path prefix to the RESTful url. Defaults to '/1'. Used with non-standard clouds/emergency service back up addresses.
+=item C<host_path_prefix>,  Path prefix to the RESTful url. Defaults to '/1'. Used with non-standard clouds/emergency service back up addresses.
 
-=item timeout,           REST client timeout (for REST calls accessing IronMQ.)
+=item C<timeout>,           REST client timeout (for REST calls accessing IronMQ.)
 
-=item config,            Config filename with path if required.
+=item C<config>,            Config filename with path if required.
 
 =back
 
-You can also give the parameters in the config file '.iron.json' or 
-'iron.json' (in local dir) or as environmental variables. Please read 
-http://dev.iron.io/mq/reference/configuration/ for further details.
+You can also give the parameters in the config file F<.iron.json> or 
+F<iron.json> (in local directory) or as environmental variables. Please read 
+L<Configuring the Official Client Libraries|http://dev.iron.io/mq/reference/configuration/> for further details.
 
 =head3 Client Documentation
 
@@ -175,7 +164,7 @@ Please read individual client's documentation for using them.
 =cut
 
 
-# FUNCTIONS
+=head1 FUNCTIONS
 
 =head2 ironcache
 
@@ -207,8 +196,7 @@ Create an IronWorker client object and return it to user.
 
 sub ironworker {
 	my (%params) = @_;
-	croak('IronWorker not yet implemented!');
-	#return IO::Iron::IronWorker::Client->new( \%params );
+	return IO::Iron::IronWorker::Client->new( \%params );
 }
 
 
@@ -254,22 +242,22 @@ L<http://search.cpan.org/dist/IO-Iron/>
 =back
 
 
-=head1 ACKNOWLEDGEMENTS
+=head1 ACKNOWLEDGMENTS
 
-Cool idea, "message queue in the cloud": http://www.iron.io/.
+Cool idea, "message queue in the cloud": L<http://www.iron.io/|http://www.iron.io/>.
 And well implemented, too, with webhooks for several functions!
 
 =head1 TODO
 
 =over 4
 
-=item * Implement IO::Iron::IronWorker.
+=item * Implement IO::Iron::IronWorker (partly done).
 
 =item * The IronMQ client needs to control the queues, perhaps using semafores.
 
 =item * A buffer mechanism to keep the messages while the IronMQ REST service is unavailable. IO::Iron::IronMQ::ASyncPush?
 
-=item * Push queues.
+=item * Implement push queues.
 
 =item * Mock IronMQ for testing.
 
@@ -291,16 +279,12 @@ And well implemented, too, with webhooks for several functions!
 
 =back
 
-=item * A strategy for log and error messages?
-
 =item * Option to delete queue when IO::Iron::IronMQ::Queue object goes to garbage collection?
 
 =item * Verify the client is connected when created (by calling queues?)
 
-=item * Start using "=encoding utf8" and move compatibility from 5.8 to 5.10.
-
 =item * Rethink the using of REST:Client. Since message queues often involve a lot of traffic 
-but always to the same address, REST:Client might not be the best solution.
+but always to the same address, we need to optimize REST:Client usage.
 
 =back
 

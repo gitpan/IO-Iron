@@ -22,11 +22,11 @@ IO::Iron::IronCache::Client - IronCache (Online Item-Value Storage) Client.
 
 =head1 VERSION
 
-Version 0.01_04
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 
 =head1 SYNOPSIS
@@ -63,47 +63,7 @@ our $VERSION = '0.02';
 
 =head1 REQUIREMENTS
 
-Requires the following packages:
-
-=over 8
-
-=item Log::Any, v. 0.15
-
-=item File::Slurp, v. 9999.19
-
-=item JSON, v. 2.53
-
-=item Carp::Assert::More, v. 1.12
-
-=item REST::Client, v. 88
-
-=item File::HomeDir, v. 1.00,
-
-=item Exception::Class, v. 1.37
-
-=item Try::Tiny, v. 0.18
-
-=item Scalar::Util, v. 1.27
-
-=item URI::Escape, v. 3.31
-
-=back
-
-Requires IronIO account. Three configuration items must be set 
-(others available) before using the functions: 
-'project_id', 'token' and 'host'.
-These can be set in a json file, as environmental variables 
-or as parameters when creating the object.
-
-=over 8
-
-=item project_id, the identification string, from IronIO.
-
-=item token, an OAuth authentication token string, from IronIO.
-
-=item host, the cloud in which you want to operate: 'cache-aws-us-east-1' for AWS (Amazon).
-
-=back
+See L<IO::Iron|IO::Iron> for requirements.
 
 =cut
 
@@ -112,8 +72,8 @@ use Hash::Util qw{lock_keys lock_keys_plus unlock_keys legal_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';
 
-require IO::Iron::IronCache::Api;
-require IO::Iron::Common;
+use IO::Iron::IronCache::Api ();
+use IO::Iron::Common ();
 require IO::Iron::Connection;
 require IO::Iron::IronCache::Cache;
 
@@ -149,35 +109,7 @@ IO::Iron::IronCache::Client is a normal Perl package meant to be used as an obje
 	require IO::Iron::IronCache::Client;
 	my $iron_cache_client = IO::Iron::IronCache::Client->new( { } );
 
-The following parameters can be given to new() as items in the first parameter which is a hash.
-
-=over 8
-
-=item project_id,        The ID of the project to use for requests.
-
-=item token,             The OAuth token that is used to authenticate requests.
-
-=item host,              The domain name the API can be located at. E.g. 'cache-aws-us-east-1.iron.io'.
-
-=item protocol,          The protocol that will be used to communicate with the API. Defaults to "https".
-
-=item port,              The port to connect to the API through. Defaults to 443.
-
-=item api_version,       The version of the API to connect through. Defaults to the version supported by the client.
-
-=item host_path_prefix,  Path prefix to the RESTful url. Defaults to '/1'. Used with non-standard clouds/emergency service back up addresses.
-
-=item timeout,           REST client timeout (for REST calls accessing Iron IO services).
-
-=item config,            Config filename with path if required.
-
-=back
-
-You can also give the parameters in the config file '.iron.json'
-(in home dir) or 
-'iron.json' (in current dir) or as environmental variables. Please read 
-L<http://dev.iron.io/mq/reference/configuration/|http://dev.iron.io/mq/reference/configuration/>
-for further details.
+Please see L<IO::Iron|IO::Iron> for further parameters and general usage.
 
 After creating the client, the client can create a new cache (storage), get or 
 delete an old one or get all the existing caches within 

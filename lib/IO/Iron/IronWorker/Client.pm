@@ -2,6 +2,7 @@ package IO::Iron::IronWorker::Client;
 
 ## no critic (Documentation::RequirePodAtEnd)
 ## no critic (Documentation::RequirePodSections)
+## no critic (ControlStructures::ProhibitPostfixControls)
 
 use 5.008_001;
 use strict;
@@ -22,11 +23,11 @@ IO::Iron::IronWorker::Client - IronWorker Client.
 
 =head1 VERSION
 
-Version 0.01_04
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 
 =head1 SYNOPSIS
@@ -71,42 +72,7 @@ our $VERSION = '0.02';
 
 =head1 REQUIREMENTS
 
-Requires the following packages:
-
-=over 8
-
-=item Log::Any, v. 0.15
-
-=item File::Slurp, v. 9999.19
-
-=item JSON, v. 2.53
-
-=item Carp::Assert::More, v. 1.12
-
-=item REST::Client, v. 88
-
-=item File::HomeDir, v. 1.00,
-
-=item Exception::Class, v. 1.37
-
-=item Try::Tiny, v. 0.18
-
-=item Scalar::Util, v. 1.27
-
-=back
-
-Requires IronIO account. Three configuration items must be set (others available) before using the functions: 'project_id', 'token' and 'host'.
-These can be set in a json file, as environmental variables or as parameters when creating the object.
-
-=over 8
-
-=item project_id, the identification string, from IronIO.
-
-=item token, an OAuth authentication token string, from IronIO.
-
-=item host, the cloud in which you want to operate: 'worker-aws-us-east-1' for AWS (Amazon).
-
-=back
+See L<IO::Iron|IO::Iron> for requirements.
 
 =cut
 
@@ -118,8 +84,8 @@ use Hash::Util qw{lock_keys lock_keys_plus unlock_keys legal_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';
 
-require IO::Iron::IronWorker::Api;
-require IO::Iron::Common;
+use IO::Iron::IronWorker::Api ();
+use IO::Iron::Common ();
 require IO::Iron::Connection;
 
 # CONSTANTS for this package
@@ -152,35 +118,9 @@ IO::Iron::IronWorker::Client is a normal Perl package meant to be used as an obj
     require IO::Iron::IronWorker::Client;
     my $ironworker_client = IO::Iron::IronWorker::Client->new( { } );
 
-The following parameters can be given to new() as items in the first parameter which is a hash.
+Please see L<IO::Iron|IO::Iron> for further parameters and general usage.
 
-=over 8
-
-=item project_id,        The ID of the project to use for requests.
-
-=item token,             The OAuth token that is used to authenticate requests.
-
-=item host,              The domain name the API can be located at. E.g. 'mq-aws-us-east-1.iron.io/1'.
-
-=item protocol,          The protocol that will be used to communicate with the API. Defaults to "https".
-
-=item port,              The port to connect to the API through. Defaults to 443.
-
-=item api_version,       The version of the API to connect through. Defaults to the version supported by the client.
-
-=item host_path_prefix,  Path prefix to the RESTful url. Defaults to '/1'. Used with non-standard clouds/emergency service back up addresses.
-
-=item timeout,           REST client timeout (for REST calls accessing IronMQ.)
-
-=item config,            Config filename with path if required.
-
-=back
-
-You can also give the parameters in the config file '.iron.json'
-(in home dir) or 
-'iron.json' (in current dir) or as environmental variables. Please read 
-L<http://dev.iron.io/mq/reference/configuration/|http://dev.iron.io/mq/reference/configuration/>
-for further details.
+=head2 Commands
 
 After creating the client three sets of commands is available:
 
@@ -271,7 +211,7 @@ and we create the archive in the program.
 		'runtime' => 'perl', 
 	} );
 
-With method list_code_packages() you can retrive information about all 
+With method list_code_packages() you can retrieve information about all 
 the uploaded code packages. The method get_info_about_code_package()
 will return information about only the requested code package.
 
@@ -288,7 +228,7 @@ Method delete_code_package() removes the code package from IronWorker service.
 
 	my $deleted = $iron_worker_client->delete_code_package( $code_package_id );
 
-The uploaded code package can be retrived with method download_code_package().
+The uploaded code package can be retrieved with method download_code_package().
 The downloaded file is a zip archive.
 
 	my $downloaded = $iron_worker_client->download_code_package( 
@@ -346,7 +286,6 @@ sub new {
 	my $self = IO::Iron::ClientBase->new();
 	# Add more keys to the self hash.
 	my @self_keys = (
-			#'queues',        # References to all objects created of class IO::Iron::IronMQ::Queue.
 			legal_keys(%{$self}),
 	);
 	unlock_keys(%{$self});
@@ -354,7 +293,6 @@ sub new {
 	my $config = IO::Iron::Common::get_config($params);
 	$log->debugf('The config: %s', $config);
 	$self->{'project_id'} = defined $config->{'project_id'} ? $config->{'project_id'} : undef;
-	#$self->{'queues'} = [];
 	assert_nonblank( $self->{'project_id'}, 'self->{project_id} is not defined or is blank');
 
 	unlock_keys(%{$self});
@@ -392,6 +330,8 @@ Return a list of hashes containing information about every code package in IronW
 
 =back
 
+See L</get_info_about_code_package> for an example of the returned hashes.
+
 =cut
 
 sub list_code_packages {
@@ -426,8 +366,6 @@ Update an IronWorker code package.
 =back
 
 =cut
-
-# TODO Clean the function.
 
 sub update_code_package {
 	my ($self, $params) = @_;
@@ -468,6 +406,19 @@ sub update_code_package {
 
 =back
 
+Sample response (in JSON format):
+
+	{
+	    "id": "4eb1b241cddb13606500000b",
+	    "project_id": "4eb1b240cddb13606500000a",
+	    "name": "MyWorker",
+	    "runtime": "ruby",
+	    "latest_checksum": "a0702e9e9a84b758850d19ddd997cf4a",
+	    "rev": 1,
+	    "latest_history_id": "4eb1b241cddb13606500000c",
+	    "latest_change": 1328737460598000000
+	}
+
 =cut
 
 sub get_info_about_code_package {
@@ -482,17 +433,6 @@ sub get_info_about_code_package {
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
 	my $info = $response_message;
-	# Sample:
-	#{
-	#    "id": "4eb1b241cddb13606500000b",
-	#    "project_id": "4eb1b240cddb13606500000a",
-	#    "name": "MyWorker",
-	#    "runtime": "ruby",
-	#    "latest_checksum": "a0702e9e9a84b758850d19ddd997cf4a",
-	#    "rev": 1,
-	#    "latest_history_id": "4eb1b241cddb13606500000c",
-	#    "latest_change": 1328737460598000000
-	#}
 	$log->tracef('Exiting get_info_about_code_package: %s', $info);
 	return $info;
 }
@@ -647,7 +587,7 @@ L<http://search.cpan.org/dist/IO-Iron/>
 =back
 
 
-=head1 ACKNOWLEDGEMENTS
+=head1 ACKNOWLEDGMENTS
 
 Cool idea, "workers in the cloud": http://www.iron.io/.
 

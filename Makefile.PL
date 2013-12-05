@@ -8,7 +8,7 @@ WriteMakefile(
 	AUTHOR         => q{Mikko Koivunalho <mikko.koivunalho@iki.fi>},
 	VERSION_FROM   => 'lib/IO/Iron.pm',
 	ABSTRACT_FROM  => 'lib/IO/Iron.pm',
-	LICENSE        => 'Artistic_2_0',
+	(eval { ExtUtils::MakeMaker->VERSION(6.21) } ? (LICENSE => 'artistic2') : ()),
 	PL_FILES       => {},
 	MIN_PERL_VERSION => 5.006002, # Log::Any
 	CONFIGURE_REQUIRES => {
@@ -28,7 +28,7 @@ WriteMakefile(
 		'Log::Any' => 0.15,
 		'File::Slurp' => 9999.19,
 		'JSON' => 2.53,
-		'use Data::UUID' => 1.219,
+		'Data::UUID' => 1.219,
 		'MIME::Base64' => 3.13,
 		'File::Spec' => 0, # Core
 		'Hash::Util' => 0, # Core
@@ -40,7 +40,7 @@ WriteMakefile(
 		'File::HomeDir' => 1.00,
 		'Exception::Class' => 1.37,
 		'Try::Tiny' => 0.18,
-		'Scalar::Util' => 1.27,
+		'Scalar::Util' => 0, # Core
 		'URI::Escape' => 3.31,
 	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },

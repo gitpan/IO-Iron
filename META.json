@@ -6,7 +6,7 @@
    "dynamic_config" : 1,
    "generated_by" : "ExtUtils::MakeMaker version 6.68, CPAN::Meta::Converter version 2.131560",
    "license" : [
-      "unknown"
+      "artistic_2"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
@@ -42,6 +42,7 @@
             "Carp" : "1.26",
             "Carp::Assert" : "0.2",
             "Carp::Assert::More" : "1.12",
+            "Data::UUID" : "1.219",
             "English" : "0",
             "Exception::Class" : "1.37",
             "File::HomeDir" : "1",
@@ -52,7 +53,7 @@
             "Log::Any" : "0.15",
             "MIME::Base64" : "3.13",
             "REST::Client" : "88",
-            "Scalar::Util" : "1.27",
+            "Scalar::Util" : "0",
             "Try::Tiny" : "0.18",
             "URI::Escape" : "3.31",
             "perl" : "5.006002"
@@ -60,5 +61,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.02"
+   "version" : "0.03"
 }

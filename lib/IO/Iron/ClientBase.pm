@@ -23,11 +23,11 @@ to Iron services IronCache, IronMQ and IronWorker.
 
 =head1 VERSION
 
-Version 0.01_04
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 SYNOPSIS
 
@@ -136,48 +136,10 @@ L<http://search.cpan.org/dist/IO-Iron/>
 =back
 
 
-=head1 ACKNOWLEDGEMENTS
+=head1 ACKNOWLEDGMENTS
 
 Cool idea, "message queue in the cloud": http://www.iron.io/.
 And well implemented.
-
-=head1 TODO
-
-=over 4
-
-=item * The IronMQ client needs to control the queues, perhaps using semafores.
-
-=item * A buffer mechanism to keep the messages while the IronMQ REST service is unavailable. IO::Iron::IronMQ::ASyncPush?
-
-=item * Push queues.
-
-=item * Mock IronMQ for testing.
-
-=item * Rethink the using of REST:Client. Since message queues often involve a lot of traffic 
-but always to the same address, REST:Client might not be the best solution.
-
-=item * Handle message size issues: max 64KB; Includes the entire request (delay, timeout, expiration).
-
-=item * Handle message delay, timeout and expiration min-max values.
-
-Message Var	Default	Maximum	Notes
-Message Size	--	64KB	Includes the entire request (delay, timeout, expiration).
-Delay	0sec	604,800sec	Message is made available on queue after the delay expires.
-Timeout	60sec	86,400sec	Message goes back on queue after timeout unless deleted.
-Expiration	604,800sec	2,592,000sec	Equates to 7 days and 30 days, respectively.
-Messages per Get	1	100	One or more messages can be handled at a time.
-
-=item * Better logging, consistent log and error messages.
-
-=item * Option to delete queue when IO::Iron::IronMQ::Queue object goes to garbage collection.
-
-=item * Implement IO::Iron::IronWorker.
-
-=item * Verify the client is connected when created by calling queues!
-
-=item * Start using =encoding utf8 and move compatibility from 5.8 to 5.10.
-
-=back
 
 
 =head1 LICENSE AND COPYRIGHT
