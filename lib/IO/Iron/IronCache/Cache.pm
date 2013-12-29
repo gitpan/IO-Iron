@@ -22,11 +22,11 @@ IO::Iron::IronCache::Cache - IronCache (Online Item-Value Storage) Client (Cache
 
 =head1 VERSION
 
-Version 0.03
+Version 0.04
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 
 =head1 SYNOPSIS
@@ -38,7 +38,6 @@ Please see IO::Iron::IronCache::Client for usage.
 =cut
 
 use Log::Any  qw($log);
-use JSON;
 use Hash::Util qw{lock_keys unlock_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';

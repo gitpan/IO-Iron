@@ -26,11 +26,11 @@ IO::Iron - Client Libraries to Iron services IronCache, IronMQ and IronWorker.
 
 =head1 VERSION
 
-Version 0.03
+Version 0.04
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 SYNOPSIS
 
@@ -285,6 +285,8 @@ And well implemented, too, with webhooks for several functions!
 
 =item * Rethink the using of REST:Client. Since message queues often involve a lot of traffic 
 but always to the same address, we need to optimize REST:Client usage.
+
+=item * Change from JSON to JSON::Any.
 
 =back
 

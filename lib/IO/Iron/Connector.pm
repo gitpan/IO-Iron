@@ -25,11 +25,11 @@ IO::Iron::Connector - REST API Connector, HTTP interface class.
 
 =head1 VERSION
 
-Version 0.03
+Version 0.04
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 
 =head1 SYNOPSIS
@@ -122,6 +122,7 @@ HTTP return code, hash if success/failed request.
 
 =cut
 
+# TODO check why previous message (coded content) is in the next message!
 sub perform_iron_action { ## no critic (Subroutines::ProhibitExcessComplexity)
 	my ($self, $iron_action, $params) = @_;
 	if(!defined $params) {
@@ -277,6 +278,8 @@ sub perform_http_action {
 		$request_body = q{--} . $boundary . "\n";
 		$request_body .= 'Content-Disposition: ' . 'form-data; name="data"' . "\n";
 		$request_body .= 'Content-Type: ' . 'text/plain; charset=utf-8' . "\n";
+		# TODO Inform manual bug!
+		#$request_body .= 'Content-Type: ' . 'application/json; charset=utf-8' . "\n";
 		$request_body .= "\n";
 		$request_body .= $encoded_body_content . "\n";
 		$request_body .= "\n";
@@ -285,7 +288,8 @@ sub perform_http_action {
 		$request_body .= 'Content-Type: ' . 'application/zip' . "\n";
 		$request_body .= 'Content-Transfer-Encoding: base64' . "\n";
 		$request_body .= "\n";
-		$request_body .= MIME::Base64::encode($file_as_zip) . "\n";
+		#$request_body .= MIME::Base64::encode($file_as_zip) . "\n";
+		$request_body .= $file_as_zip . "\n";
 		$request_body .= q{--} . $boundary . q{--} . "\n";
 	}
 	else {
@@ -313,8 +317,12 @@ sub perform_http_action {
 		my $decoded_body_content;
 		if(defined $params->{'return_type'} && $params->{'return_type'} eq 'BINARY') {
 			$log->tracef('Returned HTTP response header Content-Disposition:%s', $client->responseHeader('Content-Disposition'));
-			#my ($filename) = $client->responseHeader ('Content-Disposition') =~ /filename=TESTWORKER_6059683-6C03_2.zip/;
-			$decoded_body_content = { 'file' => MIME::Base64::decode( $client->responseContent() ) };
+			$client->responseHeader ('Content-Disposition') =~ /filename=(.+)$/;
+			my $filename = $1 ? $1 : '[Unknown filename]';
+			$decoded_body_content = { 'file' => $client->responseContent(), 'file_name' => $filename };
+		}
+		elsif(defined $params->{'return_type'} && $params->{'return_type'} eq 'PLAIN_TEXT') {
+			$decoded_body_content = $client->responseContent();
 		}
 		else {
 			$decoded_body_content = decode_json( $client->responseContent() );

@@ -21,8 +21,8 @@ WriteMakefile(
 		'File::Copy' => 2.21,
 		'YAML::Tiny' => 1.51,
 		'Test::Exception' => 0.31,
-		'IO::Compress::Zip' => 2.060,
-		'IO::Uncompress::Unzip' => 2.060,
+		'Archive::Zip' => 1.30,
+		'IO::String' => 1.08,
 	},  # FIXME Test::Manifest? Do we need it? looks in the t/test_manifest file to find out which tests you want to run and the order in which you want to run them.
 	PREREQ_PM => {
 		'Log::Any' => 0.15,

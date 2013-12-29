@@ -23,7 +23,7 @@ diag("Testing IO::Iron::IronMQ::Client $IO::Iron::IronMQ::Client::VERSION, Perl 
 diag('Testing IO::Iron::IronMQ::Client');
 
 # Create an IronMQ client.
-my $iron_mq_client = IO::Iron::IronMQ::Client->new( {} );
+my $iron_mq_client = IO::Iron::IronMQ::Client->new( { 'config' => 'iron_mq.json' } );
 
 # Create a new queue names.
 my $unique_queue_name_01 = common::create_unique_queue_name();

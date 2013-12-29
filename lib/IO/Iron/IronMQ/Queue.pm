@@ -23,11 +23,11 @@ IO::Iron::IronMQ::Queue - IronMQ (Message Queue) Client (Queue).
 
 =head1 VERSION
 
-Version 0.03
+Version 0.04
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 SYNOPSIS
 
@@ -203,9 +203,6 @@ sub push { ## no critic (Subroutines::ProhibitBuiltinHomonyms)
 			return scalar @ids;
 		}
 	}
-
-	$log->tracef( 'Exiting put: %d', 1 );
-	return 1;
 }
 
 =head2 pull

@@ -22,11 +22,11 @@ IO::Iron::IronMQ::Client - IronMQ (Message Queue) Client.
 
 =head1 VERSION
 
-Version 0.03
+Version 0.04
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 
 =head1 SYNOPSIS
@@ -93,7 +93,6 @@ These can be set in a json file, as environmental variables or as parameters whe
 
 use File::Slurp qw{read_file};
 use Log::Any  qw{$log};
-use JSON;
 use File::Spec qw{read_file};
 use File::HomeDir;
 use Hash::Util qw{lock_keys lock_keys_plus unlock_keys legal_keys};

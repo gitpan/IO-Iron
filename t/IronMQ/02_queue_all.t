@@ -29,7 +29,7 @@ my %msg_body_hash_02;
 subtest 'Setup for testing' => sub {
 	plan tests => 2;
 	# Create an IronMQ client.
-	$iron_mq_client = IO::Iron::IronMQ::Client->new( {} );
+	$iron_mq_client = IO::Iron::IronMQ::Client->new( { 'config' => 'iron_mq.json' } );
 	
 	# Create a new queue name.
 	$unique_queue_name_01 = common::create_unique_queue_name();

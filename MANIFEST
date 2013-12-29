@@ -15,6 +15,7 @@ lib/IO/Iron/IronMQ/Message.pm
 lib/IO/Iron/IronMQ/Queue.pm
 lib/IO/Iron/IronWorker/Api.pm
 lib/IO/Iron/IronWorker/Client.pm
+lib/IO/Iron/IronWorker/Task.pm
 Makefile.PL
 MANIFEST
 perlcriticrc
@@ -35,6 +36,8 @@ t/IronMQ/02_queue_pull.t
 t/IronMQ/02_queue_push.t
 t/IronWorker/00_load.t
 t/IronWorker/02_client_code_package.t
+t/IronWorker/02_client_schedule.t
+t/IronWorker/02_client_task.t
 t/pod-coverage.t
 t/pod.t
 META.yml                                 Module YAML meta-data (added by MakeMaker)

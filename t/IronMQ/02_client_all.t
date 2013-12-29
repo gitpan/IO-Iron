@@ -28,7 +28,7 @@ my ($unique_queue_name_01, $unique_queue_name_02, $unique_queue_name_03);
 subtest 'Setup for testing' => sub {
 	plan tests => 1;
 	# Create an IronMQ client.
-	$iron_mq_client = IO::Iron::IronMQ::Client->new( {} );
+	$iron_mq_client = IO::Iron::IronMQ::Client->new( { 'config' => 'iron_mq.json' } );
 	
 	# Create a new queue names.
 	{ use utf8;

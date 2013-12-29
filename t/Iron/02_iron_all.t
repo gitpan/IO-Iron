@@ -16,11 +16,11 @@ use IO::Iron ':all';
 
 diag("Testing IO::Iron::IronMQ::Client $IO::Iron::IronMQ::Client::VERSION, Perl $], $^X");
 
-my $iron_mq_client = ironmq();
+my $iron_mq_client = ironmq( 'config' => 'iron_mq.json' );
 my @iron_mq_queues = $iron_mq_client->get_queues();
 ok(scalar @iron_mq_queues >= 0, 'get_queues() returned a list');
 
-my $iron_cache_client = ironcache( config => 'iron_cache.json' );
+my $iron_cache_client = ironcache( 'config' => 'iron_cache.json' );
 my @iron_caches = $iron_cache_client->get_caches();
 ok(scalar @iron_mq_queues >= 0, 'get_caches() returned a list');
 
