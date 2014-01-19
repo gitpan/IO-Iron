@@ -25,11 +25,11 @@ IO::Iron::Connector - REST API Connector, HTTP interface class.
 
 =head1 VERSION
 
-Version 0.04
+Version 0.05
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 
 =head1 SYNOPSIS
@@ -39,9 +39,9 @@ This package is for internal use of IO::Iron packages.
 =cut
 
 use Log::Any  qw{$log};
-use JSON qw{encode_json decode_json};
+use JSON ();
 use Data::UUID ();
-use MIME::Base64 ();
+#use MIME::Base64 ();
 use Hash::Util qw{lock_keys lock_keys_plus unlock_keys legal_keys};
 use Carp::Assert;
 use Carp::Assert::More;
@@ -50,7 +50,7 @@ use English '-no_match_vars';
 use REST::Client ();
 use URI::Escape qw{uri_escape_utf8};
 use Try::Tiny;
-use Scalar::Util qw{blessed};
+use Scalar::Util qw{blessed looks_like_number};
 use Exception::Class (
       'IronHTTPCallException' => {
       	fields => ['status_code', 'response_message'],
@@ -265,7 +265,7 @@ sub perform_http_action {
 		my $body_content = $params->{'body'} ? $params->{'body'} : { }; # Else use an empty hash for body.
 		my $file_as_zip = $params->{'body'}->{'file'};
 		delete $params->{'body'}->{'file'};
-		my $encoded_body_content = encode_json($body_content);
+		my $encoded_body_content = JSON::encode_json($body_content);
 		# Assert $params->{'file'}
 		# Assert $params->{'file_name'}
 		# Assert $params->{'file_name'} ends with ".zip"
@@ -278,7 +278,6 @@ sub perform_http_action {
 		$request_body = q{--} . $boundary . "\n";
 		$request_body .= 'Content-Disposition: ' . 'form-data; name="data"' . "\n";
 		$request_body .= 'Content-Type: ' . 'text/plain; charset=utf-8' . "\n";
-		# TODO Inform manual bug!
 		#$request_body .= 'Content-Type: ' . 'application/json; charset=utf-8' . "\n";
 		$request_body .= "\n";
 		$request_body .= $encoded_body_content . "\n";
@@ -294,7 +293,14 @@ sub perform_http_action {
 	}
 	else {
 		my $body_content = $params->{'body'} ? $params->{'body'} : { }; # Else use an empty hash for body.
-		my $encoded_body_content = encode_json($body_content);
+		$log->debugf('About to jsonize the body:\'%s\'', $body_content);
+		foreach (keys %{$body_content}) {
+			# Gimmick to ensure the proper jsonization of numbers
+			# Otherwise numbers might end up as strings.
+			$body_content->{$_} += 0 if looks_like_number $body_content->{$_}; ## no critic (ControlStructures::ProhibitPostfixControls)
+		}
+		my $encoded_body_content = JSON::encode_json($body_content);
+		$log->debugf('Jsonized body:\'%s\'', $encoded_body_content);
 		$request_body = $encoded_body_content;
 	}
 	$client->setTimeout($timeout);
@@ -307,9 +313,6 @@ sub perform_http_action {
 			});
 	# RETURN:
 	$log->debugf('Returned HTTP response code:%s', $client->responseCode());
-	#use Data::Dumper;
-	#$log->tracef('Returned HTTP ALL:%s', Dumper($client));
-	#$log->tracef('Returned HTTP response headers:%s', Dumper($client->responseHeaders()));
 	$log->tracef('Returned HTTP response:%s', $client->responseContent());
 	if( $client->responseCode() >= HTTP_CODE_OK_MIN() && $client->responseCode() <= HTTP_CODE_OK_MAX() ) {
 		# 200 OK: Successful GET; 201 Created: Successful POST
@@ -317,15 +320,17 @@ sub perform_http_action {
 		my $decoded_body_content;
 		if(defined $params->{'return_type'} && $params->{'return_type'} eq 'BINARY') {
 			$log->tracef('Returned HTTP response header Content-Disposition:%s', $client->responseHeader('Content-Disposition'));
-			$client->responseHeader ('Content-Disposition') =~ /filename=(.+)$/;
-			my $filename = $1 ? $1 : '[Unknown filename]';
+			my $filename;
+			if($client->responseHeader ('Content-Disposition') =~ /filename=(.+)$/s) {
+				$filename = $1 ? $1 : '[Unknown filename]';
+			}
 			$decoded_body_content = { 'file' => $client->responseContent(), 'file_name' => $filename };
 		}
 		elsif(defined $params->{'return_type'} && $params->{'return_type'} eq 'PLAIN_TEXT') {
 			$decoded_body_content = $client->responseContent();
 		}
 		else {
-			$decoded_body_content = decode_json( $client->responseContent() );
+			$decoded_body_content = JSON::decode_json( $client->responseContent() );
 		}
 		$log->tracef('Exiting Connector:perform_http_action(): %s, %s', $client->responseCode(), $decoded_body_content );
 		return $client->responseCode(), $decoded_body_content;
@@ -334,7 +339,7 @@ sub perform_http_action {
 		$log->tracef('HTTP Response code: %d, %s', $client->responseCode(), 'Failure!');
 		my $decoded_body_content;
 		try {
-			$decoded_body_content = decode_json( $client->responseContent() );
+			$decoded_body_content = JSON::decode_json( $client->responseContent() );
 		};
 		my $response_message = $decoded_body_content ? $decoded_body_content->{'msg'} : $client->responseContent();
 		$log->tracef('Throwing exception in perform_http_action(): status_code=%s, response_message=%s', $client->responseCode(), $response_message );

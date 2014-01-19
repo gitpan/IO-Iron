@@ -2,6 +2,8 @@ package IO::Iron::IronWorker::Task;
 
 ## no critic (Documentation::RequirePodAtEnd)
 ## no critic (Documentation::RequirePodSections)
+## no critic (ControlStructures::ProhibitPostfixControls)
+## no critic (Subroutines::RequireArgUnpacking)
 
 use 5.008_001;
 use strict;
@@ -21,11 +23,11 @@ IO::Iron::IronWorker::Task - IronWorker (worker platform) Client (Task).
 
 =head1 VERSION
 
-Version 0.04
+Version 0.05
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 
 =head1 SYNOPSIS
@@ -40,6 +42,9 @@ use Log::Any  qw($log);
 use Hash::Util qw{lock_keys unlock_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';
+use Params::Validate qw(:all);
+
+use IO::Iron::IronWorker::Api ();
 
 # CONSTANTS for this module
 
@@ -56,20 +61,21 @@ Creator function.
 
 =cut
 
-sub new {
+sub new { ## no critic (Subroutines::ProhibitExcessComplexity)
 	my ($class, $params) = @_;
 	$log->tracef('Entering new(%s, %s)', $class, $params);
 	my $self;
 	my @self_keys = ( ## no critic (CodeLayout::ProhibitQuotedWordLists)
-		'ironworker_client',         # Reference to IronWorker client
-		'connection',            # Reference to REST client
+		'ironworker_client', # Reference to IronWorker client
+		'connection',      # Reference to REST client
 		'last_http_status_code', # After successfull network operation, the return value is here.
 		# Can be given when queueing a new task:
-		'code_name',       # The name of the code package to execute for this task (mandatory).
+		'code_name', # The name of the code package to execute for this task (mandatory).
 		'payload',         # A string of data to be passed to the worker (usually JSON), can be empty (mandatory).
 		'priority',        # The priority queue to run the task in. Valid values are 0, 1, and 2. 0 is the default.
 		'timeout',         # The maximum runtime of your task in seconds.
 		'delay',           # The number of seconds to delay before actually queuing the task. Default is 0.
+		'name',            # Name of task or scheduled task.
 		# These are for scheduled task:
 		'run_every',       # The amount of time, in seconds, between runs
 		'end_at',          # The time tasks will stop being queued. Should be a time or datetime.
@@ -87,7 +93,6 @@ sub new {
 		'duration',        # Execution duration?
 		'updated_at',      # Timestamp (ISO) of last update.
 		'created_at',      # Timestamp (ISO) of creation. E.g. "2012-11-10T18:31:08.064Z"
-		'name',            # Name of task or scheduled task.
 	);
 	lock_keys(%{$self}, @self_keys);
 	$self->{'ironworker_client'} = $params->{'ironworker_client'} if defined $params->{'ironworker_client'};
@@ -132,21 +137,97 @@ sub new {
 	return $blessed_ref;
 }
 
-=head2 id
+=head2 Getters/setters
 
-Set or get id.
+Set or get a property.
+When setting, returns the reference to the object.
+
+=over 8
+
+=item code_name,         The name of the code package to execute for this task (mandatory).
+
+=item payload,          A string of data to be passed to the worker (usually JSON), can be empty (mandatory).
+
+=item priority,         The priority queue to run the task in. Valid values are 0, 1, and 2. 0 is the default.
+
+=item timeout,          The maximum runtime of your task in seconds.
+
+=item delay,            The number of seconds to delay before actually queuing the task. Default is 0.
+
+=item name,             Name of task or scheduled task.
+
+=item B<These are for scheduled task:>
+
+=item run_every,        The amount of time, in seconds, between runs
+
+=item end_at,           The time tasks will stop being queued. Should be a time or a full timestamp (date and time).
+
+=item run_times,        The number of times a task will run.
+
+=item start_at,         The time the scheduled task should first be run.
+
+=item B<Returned when queried a queued task:>
+
+=item id,               Task or Scheduled task id.
+
+=item project_id,       Iron.io project ID.
+
+=item code_id,          The code package id.
+
+=item status,           Task execution status.
+
+=item code_history_id,  Code package revision id?
+
+=item code_rev,         Code package revision number.
+
+=item start_time,       Execution started?
+
+=item end_time,         Execution finished?
+
+=item duration,         Execution duration?
+
+=item updated_at,       Timestamp (ISO) of last update.
+
+=item created_at,       Timestamp (ISO) of creation. E.g. "2012-11-10T18:31:08.064Z"
+
+
+=back
 
 =cut
 
-sub id {
-	my ($self, $id) = @_;
-	$log->tracef('Entering id(%s)', $id);
-	if( defined $id ) {
-		$self->{'id'} = $id;
-		return 1;
+sub code_name { return $_[0]->_access_internal('code_name', $_[1]); }
+sub payload { return $_[0]->_access_internal('payload', $_[1]); }
+sub priority { return $_[0]->_access_internal('priority', $_[1]); }
+sub timeout { return $_[0]->_access_internal('timeout', $_[1]); }
+sub delay { return $_[0]->_access_internal('delay', $_[1]); }
+sub name { return $_[0]->_access_internal('name', $_[1]); }
+		# These are for scheduled task:
+sub run_every { return $_[0]->_access_internal('run_every', $_[1]); }
+sub end_at { return $_[0]->_access_internal('end_at', $_[1]); }
+sub run_times { return $_[0]->_access_internal('run_times', $_[1]); }
+sub start_at { return $_[0]->_access_internal('start_at', $_[1]); }
+		# Returned when queried a queued task:
+sub id { return $_[0]->_access_internal('id', $_[1]); }
+sub project_id { return $_[0]->_access_internal('project_id', $_[1]); }
+sub code_id { return $_[0]->_access_internal('code_id', $_[1]); }
+sub status { return $_[0]->_access_internal('status', $_[1]); }
+sub code_history_id { return $_[0]->_access_internal('code_history_id', $_[1]); }
+sub code_rev { return $_[0]->_access_internal('code_rev', $_[1]); }
+sub start_time { return $_[0]->_access_internal('start_time', $_[1]); }
+sub end_time { return $_[0]->_access_internal('end_time', $_[1]); }
+sub duration { return $_[0]->_access_internal('duration', $_[1]); }
+sub updated_at { return $_[0]->_access_internal('updated_at', $_[1]); }
+sub created_at { return $_[0]->_access_internal('created_at', $_[1]); }
+
+sub _access_internal {
+	my ($self, $var_name, $var_value) = @_;
+	$log->tracef('_access_internal(%s, %s)', $var_name, $var_value);
+	if( defined $var_value ) {
+		$self->{$var_name} = $var_value;
+		return $self;
 	}
 	else {
-		return $self->{'id'};
+		return $self->{$var_name};
 	}
 }
 
@@ -162,11 +243,11 @@ sub id {
 
 =back
 
-Return the task's log (task's stdout).
+Return the task's log (task's STDOUT).
 
 =cut
 
-sub log {
+sub log { ## no critic (Subroutines::ProhibitBuiltinHomonyms)
 	my ($self) = @_;
 	$log->tracef('Entering log().');
 
@@ -211,7 +292,7 @@ sub cancel {
 		IO::Iron::IronWorker::Api::IRONWORKER_CANCEL_A_TASK(),
 		{ '{Task ID}' => $task_id, } );
 	$self->{'last_http_status_code'} = $http_status_code;
-	assert_is($response_message->{'msg'}, 'Cancelled'); # FIXME Could be dangerous!
+	assert_is($response_message->{'msg'}, 'Cancelled');
 
 	$log->tracef( 'Exiting cancel(): %s', 1 );
 	return 1;
@@ -234,26 +315,28 @@ Set the progress info to the task.
 =cut
 
 sub set_progress {
-	my ($self, $params) = @_;
-	assert_hashref( $params, 'params is not defined or is not a hash reference.');
-	assert_nonblank( $params->{'percent'}, 'params->{percent} is not defined or is blank');
-	assert_nonblank( $params->{'msg'}, 'params->{msg}  is not defined or is blank');
-	$log->tracef('Entering set_progress(%s)', $params);
+	my $self = shift;
+	my %params = validate_with(
+		'params' => \@_,
+		'normalize_keys' => sub { return lc shift },
+		'spec' => {
+			'percent' => { type => SCALAR, }, # percentage.
+			'msg' => { type => SCALAR, }, # message.
+		},
+    );
+	$log->tracef('Entering set_progress(%s)', \%params);
 
 	my $task_id = $self->id();
 	assert_nonblank($task_id, 'task id not set. Task queued yet?');
 	my $connection = $self->{'connection'};
-	my %request_body;
-	$request_body{'percent'} = $params->{'percent'} if defined $params->{'percent'};
-	$request_body{'msg'} = $params->{'msg'} if defined $params->{'msg'};
 	my ( $http_status_code, $response_message ) = $connection->perform_iron_action(
 		IO::Iron::IronWorker::Api::IRONWORKER_SET_A_TASKS_PROGRESS(),
 		{ '{Task ID}' => $task_id,
-			'body' => \%request_body,
+			'body' => \%params,
 		}
 	);
 	$self->{'last_http_status_code'} = $http_status_code;
-	assert_is($response_message->{'msg'}, 'Progress set'); # FIXME Could be dangerous!
+	assert_is($response_message->{'msg'}, 'Progress set');
 
 	$log->tracef( 'Exiting set_progress(): %s', 1 );
 	return 1;
@@ -263,7 +346,7 @@ sub set_progress {
 
 =over
 
-=item Params: [none]
+=item Params: delay (number of seconds before the task is queued again)
 
 =item Return: new task id if successful.
 
@@ -276,24 +359,28 @@ Retry a task. A new task id is updated to id field of the object. The id is also
 =cut
 
 sub retry {
-	my ($self, $delay) = @_;
-	assert_nonnegative($delay, 'delay is non-negative integer.');
-	$log->tracef( 'Entering retry(%s)', $delay );
+	my $self = shift;
+	my %params = validate_with(
+		'params' => \@_,
+		'normalize_keys' => sub { return lc shift },
+		'spec' => {
+			'delay' => { type => SCALAR, }, # delay
+		},
+    );
+	$log->tracef( 'Entering retry(%s)', \%params );
 
 	my $task_id = $self->id();
 	assert_nonblank($task_id, 'task id not set. Task queued yet?');
 	my $connection = $self->{'connection'};
-	my %request_body;
-	$request_body{'delay'} = $delay;
 	my ( $http_status_code, $response_message ) = $connection->perform_iron_action(
 		IO::Iron::IronWorker::Api::IRONWORKER_RETRY_A_TASK(),
 		{
 			'{Task ID}' => $task_id,
-			'body' => \%request_body,
+			'body' => \%params,
 		}
 	);
 	$self->{'last_http_status_code'} = $http_status_code;
-	assert_is($response_message->{'msg'}, 'Queued up'); # FIXME Could be dangerous!
+	assert_is($response_message->{'msg'}, 'Queued up');
 	my $new_task_id = $response_message->{'tasks'}->[0]->{'id'};
 	$self->id($new_task_id); # We get a new id.
 
@@ -329,7 +416,7 @@ sub cancel_scheduled {
 		IO::Iron::IronWorker::Api::IRONWORKER_CANCEL_A_SCHEDULED_TASK(),
 		{ '{Schedule ID}' => $task_id, } );
 	$self->{'last_http_status_code'} = $http_status_code;
-	assert_is($response_message->{'msg'}, 'Cancelled'); # FIXME Could be dangerous!
+	assert_is($response_message->{'msg'}, 'Cancelled');
 
 	$log->tracef( 'Exiting cancel_scheduled(): %s', 1 );
 	return 1;

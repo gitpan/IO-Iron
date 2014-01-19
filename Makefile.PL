@@ -29,7 +29,7 @@ WriteMakefile(
 		'File::Slurp' => 9999.19,
 		'JSON' => 2.53,
 		'Data::UUID' => 1.219,
-		'MIME::Base64' => 3.13,
+		#'MIME::Base64' => 3.13,
 		'File::Spec' => 0, # Core
 		'Hash::Util' => 0, # Core
 		'Carp::Assert' => 0.20,
@@ -42,6 +42,7 @@ WriteMakefile(
 		'Try::Tiny' => 0.18,
 		'Scalar::Util' => 0, # Core
 		'URI::Escape' => 3.31,
+		'Params::Validate' => 1.08,
 	},
 	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
 	clean => { FILES => 'IO-Iron-*' },

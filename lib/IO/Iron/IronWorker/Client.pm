@@ -1,8 +1,9 @@
 package IO::Iron::IronWorker::Client;
 
-## no critic (Documentation::RequirePodAtEnd)
+## no critic (Documentation::RequirePodAtEnd
 ## no critic (Documentation::RequirePodSections)
 ## no critic (ControlStructures::ProhibitPostfixControls)
+## no critic (Subroutines::RequireArgUnpacking)
 
 use 5.008_001;
 use strict;
@@ -23,18 +24,18 @@ IO::Iron::IronWorker::Client - IronWorker Client.
 
 =head1 VERSION
 
-Version 0.04
+Version 0.05
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 
 =head1 SYNOPSIS
 
 	require IO::Iron::IronWorker::Client;
 
-	my $ironworker_client = IO::Iron::IronWorker::Client->new( {} );
+	my $ironworker_client = IO::Iron::IronWorker::Client->new();
 	# or
 	use IO::Iron qw(get_ironworker);
 	my $iron_worker_client = get_ironworker();
@@ -50,7 +51,7 @@ our $VERSION = '0.04';
 	} );
 
 	my $code_package_id;
-	my @code_packages = $iron_worker_client->list_code_packages( { } );
+	my @code_packages = $iron_worker_client->list_code_packages();
 	foreach (@code_packages) {
 		if($_->{'name'} eq $unique_code_package_name) {
 			$code_package_id = $_->{'id'};
@@ -58,9 +59,9 @@ our $VERSION = '0.04';
 		}
 	}
 
-	my $code_package = $iron_worker_client->get_info_about_code_package( $code_package_id );
+	my $code_package = $iron_worker_client->get_info_about_code_package( 'id' => $code_package_id );
 
-	my @code_package_revisions = $iron_worker_client->list_code_package_revisions( $code_package_id );
+	my @code_package_revisions = $iron_worker_client->list_code_package_revisions( 'id' => $code_package_id );
 
 	my $downloaded = $iron_worker_client->download_code_package( 
 		$code_package_id, { 
@@ -74,12 +75,24 @@ our $VERSION = '0.04';
 	my $task = $iron_worker_client->create_task(
 			$unique_code_package_name,
 			$task_payload,
-			{ 'priority' => 0, }
+			{
+				'priority' => 0,
+				#
+				# additional parameters for a task:
+				# 'priority',        # The priority queue to run the task in. Valid values are 0, 1, and 2. 0 is the default.
+				# 'timeout',         # The maximum runtime of your task in seconds.
+				# 'delay',           # The number of seconds to delay before actually queuing the task. Default is 0.
+				# For scheduled task:
+				# 'priority',        # The priority queue to run the task in. Valid values are 0, 1, and 2. 0 is the default.
+				# 'run_every',       # The amount of time, in seconds, between runs
+				# 'end_at',          # The time tasks will stop being queued. Should be a time or datetime.
+				# 'run_times',       # The number of times a task will run.
+				# 'start_at',        # The time the scheduled task should first be run.
+				# 'name',            # Name of task or scheduled task.
+			}
 	);
-	my $task_code_package_name = $task->code_package_name();
-	$task->timeout(3600);
-	$task->delay(0);
-	# When queueing, the task object is updated with returned id.
+
+	# When queuing, the task object is updated with returned id.
 	my $task_id = $iron_worker_client->queue($task);
 	# Or:
 	my @task_ids = $iron_worker_client->queue($task1, $task2);
@@ -87,8 +100,10 @@ our $VERSION = '0.04';
 	my $number_of_tasks_queued = $iron_worker_client->queue($task1, $task2);
 	#
 	my $task_id = $task->id();
-	while( $task->status() ne 'complete' ) {
-		sleep(1);
+	my $task_info = $iron_worker_client->get_info_about_task($task_id);
+	until ($task_info->{'status'} =~ /(complete|error|killed|timeout)/) {
+		sleep 3;
+		$task_info = $iron_worker_client->get_info_about_task($task_id);
 	}
 	# $task->status() updates the task's information.
 	my $task_duration = $task->duration();
@@ -146,13 +161,11 @@ See L<IO::Iron|IO::Iron> for requirements.
 
 =cut
 
-#use File::Slurp qw{read_file};
 use Log::Any  qw{$log};
-#use File::Spec qw{read_file};
-#use File::HomeDir;
 use Hash::Util qw{lock_keys lock_keys_plus unlock_keys legal_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';
+use Params::Validate qw(:all);
 
 use IO::Iron::IronWorker::Api ();
 use IO::Iron::Common ();
@@ -187,7 +200,7 @@ controls with HTTPS transport and cloud-optimized performance. [see L<http://www
 IO::Iron::IronWorker::Client is a normal Perl package meant to be used as an object.
 
     require IO::Iron::IronWorker::Client;
-    my $ironworker_client = IO::Iron::IronWorker::Client->new( { } );
+    my $ironworker_client = IO::Iron::IronWorker::Client->new();
 
 Please see L<IO::Iron|IO::Iron> for further parameters and general usage.
 
@@ -201,51 +214,53 @@ After creating the client three sets of commands is available:
 
 =over 8
 
-=item list_code_packages()
+=item IO::Iron::IronWorker::Client::list_code_packages()
 
-=item update_code_package(params)
+=item IO::Iron::IronWorker::Client::update_code_package(params)
 
-=item get_info_about_code_package(code_package_id)
+=item IO::Iron::IronWorker::Client::get_info_about_code_package('id' => code_package_id)
 
-=item delete_code_package(code_package_id)
+=item IO::Iron::IronWorker::Client::delete_code_package('id' => code_package_id)
 
-=item download_code_package(code_package_id, params)
+=item IO::Iron::IronWorker::Client::download_code_package('id' => code_package_id, params)
 
-=item list_code_package_revisions(code_package_id)
-
-=back
-
-=item Commands for operating tasks: (NOT YET IMPLEMENTED)
-
-=over 8
-
-=item list_tasks
-
-=item queue_task
-
-=item get_info_about_task
-
-=item get_tasks_log
-
-=item cancel_task
-
-=item set_tasks_progress
-
-=item retry_task
+=item IO::Iron::IronWorker::Client::list_code_package_revisions('id' => code_package_id)
 
 =back
 
-=item Commands for operating scheduled tasks: (NOT YET IMPLEMENTED)
+=item Commands for operating tasks:
 
 =over 8
 
-=item list_scheduled_tasks
+=item IO::Iron::IronWorker::Client::create_task('code_name' => $name, 'payload' => $payload, ...)
 
-=item schedule_task
+=item IO::Iron::IronWorker::Client::tasks('code_name' => $code_name, ...)
 
-=item get_info_about_scheduled_task
+=item IO::Iron::IronWorker::Client::queue(tasks => $task | [@tasks] )
 
-=item cancel_scheduled_task
+=item IO::Iron::IronWorker::Client::get_info_about_task('id => $id)
+
+=item IO::Iron::IronWorker::Task::log()
+
+=item IO::Iron::IronWorker::Task::cancel()
+
+=item IO::Iron::IronWorker::Task::set_progress('percent' => $number, 'msg' => $text)
+
+=item retry_task()
+
+=back
+
+=item Commands for operating scheduled tasks:
+
+=over 8
+
+=item IO::Iron::IronWorker::Client::scheduled_tasks('code_name' => $code_name, ...)
+
+=item IO::Iron::IronWorker::Client::schedule(tasks => $task | [@tasks] )
+
+=item IO::Iron::IronWorker::Client::get_info_about_scheduled_task('id' => $id)
+
+=item IO::Iron::IronWorker::Task::cancel_scheduled()
 
 =back
 
@@ -258,14 +273,15 @@ with its dependency files (other libraries, configuration files, etc.).
 
 After creating the zip file and reading it into a perl variable, upload it.
 In the following example, the worker contains only one file
-and we create the archive in the program.
+and we create the archive in the program - as opposed to creating it before
+and simply reading it from a file before uploading it.
 
 	require IO::Iron::IronWorker::Client;
 	use IO::Compress::Zip;
 	
-	$iron_worker_client = IO::Iron::IronWorker::Client->new( { 
+	$iron_worker_client = IO::Iron::IronWorker::Client->new(
 		'config' => 'iron_worker.json' 
-	} );
+	);
 
 	my $worker_as_string_ = <<EOF;
 	print qq{Hello, World!\n};
@@ -275,12 +291,12 @@ and we create the archive in the program.
 	
 	IO::Compress::Zip::zip(\$worker_as_string => \$worker_as_zip);
 	
-	my $code_package_return_id = $iron_worker_client->update_code_package( { 
+	my $code_package_return_id = $iron_worker_client->update_code_package(
 		'name' => 'HelloWorld_code_package', 
 		'file' => $worker_as_string, 
-		'file_name' => helloworld.pl, 
+		'file_name' => 'helloworld.pl', 
 		'runtime' => 'perl', 
-	} );
+	);
 
 With method list_code_packages() you can retrieve information about all 
 the uploaded code packages. The method get_info_about_code_package()
@@ -293,56 +309,64 @@ will return information about only the requested code package.
 			last;
 		}
 	}
-	my $code_package = $iron_worker_client->get_info_about_code_package( $code_package_id );
+	my $code_package = $iron_worker_client->get_info_about_code_package(
+		'id' => $code_package_id,
+		);
 
 Method delete_code_package() removes the code package from IronWorker service.
 
-	my $deleted = $iron_worker_client->delete_code_package( $code_package_id );
+	my $deleted = $iron_worker_client->delete_code_package(
+		'id' => $code_package_id,
+		);
 
 The uploaded code package can be retrieved with method download_code_package().
 The downloaded file is a zip archive.
 
 	my $downloaded = $iron_worker_client->download_code_package( 
-		$code_package_id, { 
-			'revision' => 1,
-		} );
+		'id' => $code_package_id, 'revision' => 1,
+	);
 
 The code packages get revision numbers according to their upload order.
 The first upload of a code package gets revision number 1. Any subsequent 
 upload of the same code package (same name) will get one higher 
 revision number so the different uploads can be recognized.
 
-	my @code_package_revisions = $iron_worker_client->list_code_package_revisions( $code_package_id );
+	my @code_package_revisions = $iron_worker_client->list_code_package_revisions(
+		'id' => $code_package_id,
+	);
 
 =head3 Operating tasks
 
 Every task needs two parameters: the name of the code package on whose 
 code they will run and a payload. The payload is passed to the code
 package as a file. Payload is mandatory so if your code doesn't need it,
-just insert an empty string.
+just insert an empty string. Payload can be any string, or stringified
+object, normally JSON.
 
-	my $task_payload = 'Task payload (can be JSONized)';
+	my $task_payload = 'Task payload (could be JSONized object)';
 	my $task = $iron_worker_client->create_task(
-			$unique_code_package_name,
-			$task_payload,
-			{ 'priority' => 0, }
+			'code_name' => $unique_code_package_name,
+			'payload' => $task_payload,
+			'priority' => 0,
 	);
 	my $task_code_package_name = $task->code_package_name();
 
 Queue the task, i.e. put it to the queue for immediate execution.
 "Immediate" doesn't mean that IronWorker will execute it right away,
-just ASAP according to priority and delay parameters. When queueing,
+just ASAP according to priority and delay parameters. When queuing,
 the task object is updated with returned id.
 
-	my $task_id = $iron_worker_client->queue($task);
+	my $task_id = $iron_worker_client->queue('task' => $task);
 	# Or:
-	my @task_ids = $iron_worker_client->queue($task1, $task2);
+	my @task_ids = $iron_worker_client->queue('task' => [$task1, $task2, ]);
 	# Or: 
-	my $number_of_tasks_queued = $iron_worker_client->queue($task1, $task2);
+	my $number_of_tasks_queued = $iron_worker_client->queue(
+		'task' => [$task1, $task2],
+		);
 
 Read the STDOUT log of the task.
 
-	my $task_log = $task->log(); # Log is text/plain
+	my $task_log = $task->log(); # Log is mime type text/plain
 
 Cancel task if it's still in queue or currently being executed.
 
@@ -350,45 +374,49 @@ Cancel task if it's still in queue or currently being executed.
 
 Change the "progress display" of the task.
 
-	my $progress_set = $task->progress( { 
+	my $progress_set = $task->progress(
 		'percent' => 25,
 		'msg' => 'Not even halfway through!',
-	} );
+		);
 
-Retry a failed task. Notice that you cannot change the payload. If the
+Retry a failed task. You cannot change the payload. If the
 payload is faulty, then you need to create a new task.
 
-	my $retried = $task->retry();
-	$task_id = $task->id(); # New task id after retry().
+	my $new_task_id = $task->retry();
+	# New task id after retry().
 
 Get info about a task. Info is a hash structure.
 
-	my $task_info = $iron_worker_client->get_info_about_task( $task_id );
+	my $task_info = $iron_worker_client->get_info_about_task( 'task' => $task_id );
 
 =head3 Operating scheduled tasks
 
 Create a new task for scheduling.
 
 	my $schedule_task = $iron_worker_client->create_task(
-		$unique_code_package_name,
-		$task_payload,
-		{
-			'priority' => 0,
-			'run_every' => 120, # Every two minutes.
-		}
-	);
+		'code_name' => $unique_code_package_name,
+		'payload' => $task_payload,
+		'priority' => 0,
+		'run_every' => 120, # Every two minutes.
+		);
 
 Schedule the task or tasks. When scheduling, the task object is updated with returned id.
 
-	$schedule_task = $iron_worker_client->schedule($schedule_task);
+	$schedule_task = $iron_worker_client->schedule('task' => $schedule_task);
 	# Or:
-	my @scheduled_tasks = $iron_worker_client->schedule($schedule_task1, $schedule_task2);
+	my @scheduled_tasks = $iron_worker_client->schedule(
+		'task' => [$schedule_task1, $schedule_task2]
+		);
 	# Or: 
-	my $number_of_scheduled_tasks = $iron_worker_client->schedule($schedule_task1, $schedule_task2);
+	my $number_of_scheduled_tasks = $iron_worker_client->schedule(
+		'task' => [$schedule_task1, $schedule_task2]
+		);
 
 Get information about the scheduled task.
 
-	my $scheduled_task_info = $iron_worker_client->get_info_about_scheduled_task( $task_id );
+	my $scheduled_task_info = $iron_worker_client->get_info_about_scheduled_task(
+		'id' => $task_id
+		);
 
 Get all scheduled tasks as IO::Iron::IronWorker::Task objects.
 
@@ -429,8 +457,14 @@ Creator function.
 =cut
 
 sub new {
-	my ($class, $params) = @_;
-	$log->tracef('Entering new(%s, %s)', $class, $params);
+	my $class = shift;
+	my %params = validate(
+		@_, {
+			map { $_ => { type => SCALAR, optional => 1 }, } IO::Iron::Common::IRON_CLIENT_PARAMETERS(), ## no critic (ValuesAndExpressions::ProhibitCommaSeparatedStatements)
+		}
+	);
+
+	$log->tracef('Entering new(%s, %s)', $class, %params);
 	my $self = IO::Iron::ClientBase->new();
 	# Add more keys to the self hash.
 	my @self_keys = (
@@ -438,7 +472,7 @@ sub new {
 	);
 	unlock_keys(%{$self});
 	lock_keys_plus(%{$self}, @self_keys);
-	my $config = IO::Iron::Common::get_config($params);
+	my $config = IO::Iron::Common::get_config(%params);
 	$log->debugf('The config: %s', $config);
 	$self->{'project_id'} = defined $config->{'project_id'} ? $config->{'project_id'} : undef;
 	assert_nonblank( $self->{'project_id'}, 'self->{project_id} is not defined or is blank');
@@ -457,7 +491,7 @@ sub new {
 		'api_version' => $config->{'api_version'},
 		'host_path_prefix' => $config->{'host_path_prefix'},
 		'timeout' => $config->{'timeout'},
-		'connector' => $params->{'connector'},
+		'connector' => $params{'connector'},
 		}
 	);
 	$self->{'connection'} = $connection;
@@ -505,13 +539,33 @@ sub list_code_packages {
 
 =head2 update_code_package
 
-Update an IronWorker code package.
+Upload an IronWorker code package or update an existing code package.
 
 =over 8
 
-=item Params: .
+=item Params:
 
-=item Return: new code package id == success.
+=over 8
+
+=item name, code package name, mandatory.
+
+=item file, the zip archive as a string buffer, optional if only updating other parameters.
+
+=item file_name, the zip archive name, required if parameter 'file' is present.
+
+=item runtime, the runtime type, e.g. sh, perl or ruby, required if parameter 'file' is present.
+
+=item config, an (configuration) file for the code package, optional.
+
+=item max_concurrency, number of concurrent runs, optional.
+
+=item retries, number of retries, optional.
+
+=item retries_delay, delay between retries, optional.
+
+=back
+
+=item Return: if successful, a new code package id.
 
 =item Exception: IronHTTPCallException if fails. (IronHTTPCallException: status_code=<HTTP status code> response_message=<response_message>)
 
@@ -520,24 +574,26 @@ Update an IronWorker code package.
 =cut
 
 sub update_code_package {
-	my ($self, $params) = @_;
-	$log->tracef('Entering update_code_package(%s)', $params);
-	assert_nonblank( $params->{'file'}, 'code package name (params->{file}) is not defined or is blank');
-
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			'name' => { type => SCALAR, }, # Code package name.
+			'file' => { type => SCALAR, optional => 1, # The zip archive as a string buffer.
+				depends => [ 'file_name', 'runtime' ], },
+			'file_name' => { type => SCALAR, optional => 1 },  # Name of the zip file, not 
+			'runtime' => { type => SCALAR, optional => 1, }, # The runtime type, e.g. sh, perl, ruby.
+			'config' => { type => SCALAR, optional => 1, },
+			'max_concurrency' => { type => SCALAR, optional => 1, },
+			'retries' => { type => SCALAR, optional => 1, },
+			'retries_delay' => { type => SCALAR, optional => 1, },
+		}
+	);
+	$log->tracef('Entering update_code_package(%s)', \%params);
 	my $connection = $self->{'connection'};
-	my %message_body;
-	$message_body{'file'} = $params->{'file'} if defined $params->{'file'};
-	$message_body{'file_name'} = $params->{'file_name'} if defined $params->{'file_name'};
-	$message_body{'name'} = $params->{'name'} if defined $params->{'name'}; # Code package name.
-	$message_body{'runtime'} = $params->{'runtime'} if defined $params->{'runtime'};
-	$message_body{'config'} = $params->{'config'} if defined $params->{'config'};
-	$message_body{'max_concurrency'} = $params->{'max_concurrency'} if defined $params->{'max_concurrency'};
-	$message_body{'retries'} = $params->{'retries'} if defined $params->{'retries'};
-	$message_body{'retries_delay'} = $params->{'retries_delay'} if defined $params->{'retries_delay'};
 	my ($http_status_code, $response_message) = $connection->perform_iron_action(
 			IO::Iron::IronWorker::Api::IRONWORKER_UPLOAD_OR_UPDATE_A_CODE_PACKAGE(),
 			{
-				'body'         => \%message_body,
+				'body'         => \%params,
 			}
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
@@ -574,14 +630,17 @@ Sample response (in JSON format):
 =cut
 
 sub get_info_about_code_package {
-	my ($self, $code_package_id) = @_;
-	$log->tracef('Entering get_info_about_code_package(%s)', $code_package_id);
-	assert_nonblank( $code_package_id, 'code_package_id is not defined or is blank');
-
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			'id' => { type => SCALAR, }, # Code package id.
+		}
+	);
+	$log->tracef('Entering get_info_about_code_package(%s)', \%params);
 	my $connection = $self->{'connection'};
 	my ($http_status_code, $response_message) = $connection->perform_iron_action(
 			IO::Iron::IronWorker::Api::IRONWORKER_GET_INFO_ABOUT_A_CODE_PACKAGE(),
-			{ '{Code ID}' => $code_package_id, }
+			{ '{Code ID}' => $params{'id'}, }
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
 	my $info = $response_message;
@@ -606,15 +665,18 @@ Delete an IronWorker code package.
 =cut
 
 sub delete_code_package {
-	my ($self, $code_package_id) = @_;
-	$log->tracef('Entering delete_code_package(%s)', $code_package_id);
-	assert_nonblank( $code_package_id, 'code_package_id is not defined or is blank');
-
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			'id' => { type => SCALAR, }, # Code package id.
+		}
+	);
+	$log->tracef('Entering delete_code_package(%s)', $params{'id'});
 	my $connection = $self->{'connection'};
 	my ($http_status_code, $response_message) = $connection->perform_iron_action(
 			IO::Iron::IronWorker::Api::IRONWORKER_DELETE_A_CODE_PACKAGE(),
 			{
-				'{Code ID}' => $code_package_id,
+				'{Code ID}' => $params{'id'},
 			}
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
@@ -640,17 +702,21 @@ subparam: revision.
 =cut
 
 sub download_code_package {
-	my ($self, $code_package_id, $params) = @_;
-	$log->tracef('Entering download_code_package(%s, %s)', $code_package_id, $params);
-	assert_nonblank( $code_package_id, 'code_package_id is not defined or is blank');
-
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			'id' => { type => SCALAR, }, # Code package id.
+			'revision' => { type => SCALAR, optional => 1, }, # Code package revision.
+		}
+	);
+	$log->tracef('Entering download_code_package(%s)', \%params);
 	my $connection = $self->{'connection'};
 	my %query_params;
-	$query_params{'{revision}'} = $params->{'revision'} if $params->{'revision'}; ## no critic (ControlStructures::ProhibitPostfixControls)
+	$query_params{'{revision}'} = $params{'revision'} if $params{'revision'}; ## no critic (ControlStructures::ProhibitPostfixControls)
 	my ($http_status_code, $response_message) = $connection->perform_iron_action(
 			IO::Iron::IronWorker::Api::IRONWORKER_DOWNLOAD_A_CODE_PACKAGE(),
 			{
-				'{Code ID}' => $code_package_id,
+				'{Code ID}' => $params{'id'},
 				%query_params,
 			}
 		);
@@ -679,14 +745,18 @@ Return a list of hashes containing information about one code package revisions.
 =cut
 
 sub list_code_package_revisions {
-	my ($self, $code_package_id) = @_;
-	$log->tracef('Entering list_code_package_revisions(%s)', $code_package_id);
-	assert_nonblank( $code_package_id, 'code_package_id is not defined or is blank');
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			'id' => { type => SCALAR, }, # Code package id.
+		}
+	);
+	$log->tracef('Entering list_code_package_revisions(%s)', $params{'id'});
 
 	my $connection = $self->{'connection'};
 	my ($http_status_code, $response_message) = $connection->perform_iron_action(
 			IO::Iron::IronWorker::Api::IRONWORKER_LIST_CODE_PACKAGE_REVISIONS(),
-			{ '{Code ID}' => $code_package_id, }
+			{ '{Code ID}' => $params{'id'}, }
 		);
 	my @revisions;
 	foreach (@{$response_message}) {
@@ -701,6 +771,45 @@ sub list_code_package_revisions {
 ###############################################
 ######## FUNCTIONS: TASK ######################
 ###############################################
+
+=head2 create_task
+
+=over 8
+
+=item Params: code package name.
+
+=item Return: an object of class IO::Iron::IronWorker::Task.
+
+=back
+
+This method does not access the IronWorker service.
+
+=cut
+
+sub create_task {
+	my $self = shift;
+	my %params = validate_with(
+		'params' => \@_,
+		'normalize_keys' => sub { return lc shift },
+		'spec' => {
+		'code_name' => { type => SCALAR, }, # Code package name.
+		'payload' => { type => SCALAR, },  # Payload
+		},
+		'allow_extra' => 1,
+    );
+	$log->tracef('Entering create_task(%s)', \%params);
+
+	my $connection = $self->{'connection'};
+
+	my $task = IO::Iron::IronWorker::Task->new({
+		'ironworker_client' => $self, # Pass a reference to the parent object.
+		'connection' => $connection,
+		%params,
+	});
+
+	$log->tracef('Exiting create_task: %s', $task);
+	return $task;
+}
 
 =head2 tasks
 
@@ -720,31 +829,38 @@ every task in this IronWorker project.
 =cut
 
 sub tasks {
-	my ($self, $code_package_name, $params) = @_;
-	$log->tracef('Entering tasks(%s, %s)', $code_package_name, $params);
-	assert_nonblank( $code_package_name, 'code_package_name is not defined or is blank');
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			'code_name' => { type => SCALAR, }, # Code package name.
+			'queued' => { type => SCALAR, 'optional' => 1, },
+			'running' => { type => SCALAR, 'optional' => 1, },
+			'complete' => { type => SCALAR, 'optional' => 1, },
+			'error' => { type => SCALAR, 'optional' => 1, },
+			'cancelled' => { type => SCALAR, 'optional' => 1, },
+			'killed' => { type => SCALAR, 'optional' => 1, },
+			'from_time' => { type => SCALAR, 'optional' => 1, },
+			'to_time' => { type => SCALAR, 'optional' => 1, },
+		}
+	);
+	$log->tracef('Entering tasks(%s, %s)', \%params);
 
+	my $code_name = $params{'code_name'};
+	delete $params{'code_name'};
 	my $connection = $self->{'connection'};
-	my %query_params;
-	$query_params{'{queued}'} = $params->{'queued'} if $params->{'queued'}; ## no critic (ControlStructures::ProhibitPostfixControls)
-	$query_params{'{running}'} = $params->{'running'} if $params->{'running'}; ## no critic (ControlStructures::ProhibitPostfixControls)
-	$query_params{'{complete}'} = $params->{'complete'} if $params->{'complete'}; ## no critic (ControlStructures::ProhibitPostfixControls)
-	$query_params{'{error}'} = $params->{'error'} if $params->{'error'}; ## no critic (ControlStructures::ProhibitPostfixControls)
-	$query_params{'{cancelled}'} = $params->{'cancelled'} if $params->{'cancelled'}; ## no critic (ControlStructures::ProhibitPostfixControls)
-	$query_params{'{killed}'} = $params->{'killed'} if $params->{'killed'}; ## no critic (ControlStructures::ProhibitPostfixControls)
-	$query_params{'{from_time}'} = $params->{'from_time'} if $params->{'from_time'}; ## no critic (ControlStructures::ProhibitPostfixControls)
-	$query_params{'{to_time}'} = $params->{'to_time'} if $params->{'to_time'}; ## no critic (ControlStructures::ProhibitPostfixControls)
 	my ($http_status_code, $response_message) = $connection->perform_iron_action(
 			IO::Iron::IronWorker::Api::IRONWORKER_LIST_TASKS(), {
-				'{code_name}' => $code_package_name,
-				%query_params,
+				'{code_name}' => $code_name,
+				%params,
 			} );
 	$self->{'last_http_status_code'} = $http_status_code;
 	my @tasks;
 	foreach (@{$response_message}) {
 		$log->debugf('task info:%s', $_);
-		push @tasks, $self->create_task($_->{'code_name'}, $_->{'payload'} ? $_->{'payload'} : '', 
-		{%{$_}}
+		push @tasks, $self->create_task(
+			'code_name' => $_->{'code_name'},
+			'payload' => $_->{'payload'} ? $_->{'payload'} : q{},
+			%{$_},
 		);
 	}
 	$log->debugf('Returning %d tasks.', scalar @tasks);
@@ -770,16 +886,24 @@ or number of tasks.
 =cut
 
 sub queue {
-	my ($self, @tasks) = @_;
-	assert_listref( \@tasks, 'tasks is not defined or is not a list.');
-	#foreach my $task (@tasks) {
-	#	assert_isa( $task, 'IO::Iron::IronWorker::Task', 'task is IO::Iron::IronWorker::Task.');
-	#}
-	$log->tracef('Entering queue(%s)', @tasks);
+	my $self = shift;
+	my %validate_params = (
+		'tasks' => { type => OBJECT | ARRAYREF, }, # ref to task.
+		);
+	my %params = validate(
+		@_, {
+			%validate_params
+		}
+	);
+	lock_keys(%params, keys %validate_params);
+	$log->tracef('Entering queue(%s)', \%params);
 
 	my $connection = $self->{'connection'};
 	my @message_tasks;
-	foreach my $task (@tasks) {
+	if(ref $params{'tasks'} eq 'IO::Iron::IronWorker::Task') {
+		$params{'tasks'} = [ $params{'tasks'} ];
+	}
+	foreach my $task (@{$params{'tasks'}}) {
 		assert_isa( $task, 'IO::Iron::IronWorker::Task', 'task is IO::Iron::IronWorker::Task.');
 		my %task_body;
 		$task_body{'code_name'} = $task->{'code_name'};
@@ -799,31 +923,22 @@ sub queue {
 			}
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
-	#my @task_ids;
-	#foreach my $task (@tasks) {
-	#	my $task_info = shift @{$response_message->{'tasks'}};
-	#	push @task_ids, $task_info->{'id'};
-	#	$task->id( $task_info->{'id'} );
-	#}
 
-	my ( @ids, $msg );
-	my @ret_tasks = ( @{ $response_message->{'tasks'} } );    # tasks.
-	#foreach my $ret_task_info (@ret_tasks) {
-	#	push @ids, $ret_task_info->{'id'};
-	#}
-	foreach my $task (@tasks) {
-		my $task_info = shift @ret_tasks;
+	my @ids;
+	my @ret_tasks = ( @{ $response_message->{'tasks'} } ); # tasks.
+	foreach my $task (@{$params{'tasks'}}) {
+		my $task_info = shift @ret_tasks; # We are using the same task objects.
 		push @ids, $task_info->{'id'};
 		$task->id( $task_info->{'id'} );
 	}
-	$msg = $response_message->{'msg'};    # Should be "Queued up"
+	assert_is($response_message->{'msg'}, 'Queued up'); # Could be dangerous!
 	$log->debugf( 'Queued IronWorker Task(s) (task id(s)=%s).', ( join q{,}, @ids ) );
 	if (wantarray) {
 		$log->tracef( 'Exiting queue: %s', ( join q{:}, @ids ) );
 		return @ids;
 	}
 	else {
-		if ( scalar @tasks == 1 ) {
+		if ( scalar @{$params{'tasks'}} == 1 ) {
 			$log->tracef( 'Exiting queue: %s', $ids[0] );
 			return $ids[0];
 		}
@@ -868,54 +983,23 @@ Sample response (in JSON format):
 =cut
 
 sub get_info_about_task {
-	my ($self, $task_id) = @_;
-	assert_nonblank( $task_id, 'task_id is not defined or is blank');
-	$log->tracef('Entering get_info_about_task(%s)', $task_id);
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			'id' => { type => SCALAR, }, # task id.
+		}
+	);
+	$log->tracef('Entering get_info_about_task(%s)', \%params);
 
 	my $connection = $self->{'connection'};
 	my ($http_status_code, $response_message) = $connection->perform_iron_action(
 			IO::Iron::IronWorker::Api::IRONWORKER_GET_INFO_ABOUT_A_TASK(),
-			{ '{Task ID}' => $task_id, }
+			{ '{Task ID}' => $params{'id'}, }
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
 	my $info = $response_message;
 	$log->tracef('Exiting get_info_about_task: %s', $info);
 	return $info;
-}
-
-=head2 create_task
-
-=over 8
-
-=item Params: code package name.
-
-=item Return: an object of class IO::Iron::IronWorker::Task.
-
-=back
-
-This method does not access the IronWorker service.
-
-=cut
-
-sub create_task {
-	my ($self, $code_name, $payload, $params) = @_;
-	assert_nonblank( $code_name, 'code_name is not defined or is blank');
-	assert_nonblank( $payload, 'payload is not defined or is blank');
-	assert_hashref( $params, 'params is not defined or is not a hash reference.');
-	$log->tracef('Entering create_task(%s)', $code_name, $payload, $params);
-
-	my $connection = $self->{'connection'};
-
-	my $task = IO::Iron::IronWorker::Task->new({
-		'ironworker_client' => $self, # Pass a reference to the parent object.
-		'code_name' => $code_name,
-		'payload' => $payload,
-		'connection' => $connection,
-		%{$params},
-	});
-
-	$log->tracef('Exiting create_task: %s', $task);
-	return $task;
 }
 
 ###############################################
@@ -950,8 +1034,10 @@ sub scheduled_tasks {
 	my @tasks;
 	foreach (@{$response_message}) {
 		$log->debugf('task info:%s', $_);
-		push @tasks, $self->create_task($_->{'code_name'}, $_->{'payload'} ? $_->{'payload'} : '', 
-		{%{$_}}
+		push @tasks, $self->create_task(
+			'code_name' => $_->{'code_name'},
+			'payload' => $_->{'payload'} ? $_->{'payload'} : q{},
+			%{$_},
 		);
 	}
 	$log->debugf('Returning %d tasks.', scalar @tasks);
@@ -977,16 +1063,25 @@ or number of scheduled tasks.
 =cut
 
 sub schedule {
-	my ($self, @tasks) = @_;
-	assert_listref( \@tasks, 'tasks is not defined or is not a list.');
-	#foreach my $task (@tasks) {
-	#	assert_isa( $task, 'IO::Iron::IronWorker::Task', 'task is IO::Iron::IronWorker::Task.');
-	#}
-	$log->tracef('Entering schedule(%s)', @tasks);
+	my $self = shift;
+	my %validate_params = (
+		'tasks' => { type => OBJECT | ARRAYREF, }, # ref to task.
+		);
+	my %params = validate(
+		@_, {
+			%validate_params
+		}
+	);
+	lock_keys(%params, keys %validate_params);
+	$log->tracef('Entering schedule(%s)', \%params);
 
 	my $connection = $self->{'connection'};
 	my @message_tasks;
-	foreach my $task (@tasks) {
+	if(ref $params{'tasks'} eq 'IO::Iron::IronWorker::Task') {
+		$log->debugf('The parameter is a single object.');
+		$params{'tasks'} = [ $params{'tasks'} ];
+	}
+	foreach my $task (@{$params{'tasks'}}) {
 		assert_isa( $task, 'IO::Iron::IronWorker::Task', 'task is IO::Iron::IronWorker::Task.');
 		my %task_body;
 		$task_body{'code_name'} = $task->{'code_name'};
@@ -996,7 +1091,6 @@ sub schedule {
 		$task_body{'run_times'} = $task->{'run_times'} if defined $task->{'run_times'};
 		$task_body{'priority'} = $task->{'priority'} if defined $task->{'priority'};
 		$task_body{'start_at'} = $task->{'start_at'} if defined $task->{'start_at'};
-		#$task_body{'timeout'} = $task->{'timeout'} if defined $task->{'timeout'};
 		$task_body{'name'} = $task->{'name'} if defined $task->{'name'}; # Hm... documents do not mention but example does...
 		push @message_tasks, \%task_body;
 	}
@@ -1012,7 +1106,7 @@ sub schedule {
 
 	my ( @ids, $msg );
 	my @ret_tasks = ( @{ $response_message->{'schedules'} } );    # scheduled tasks.
-	foreach my $task (@tasks) {
+	foreach my $task (@{$params{'tasks'}}) {
 		my $task_info = shift @ret_tasks;
 		push @ids, $task_info->{'id'};
 		$task->id( $task_info->{'id'} );
@@ -1025,7 +1119,7 @@ sub schedule {
 		return @ids;
 	}
 	else {
-		if ( scalar @tasks == 1 ) {
+		if ( scalar @{$params{'tasks'}} == 1 ) {
 			$log->tracef( 'Exiting schedule: %s', $ids[0] );
 			return $ids[0];
 		}
@@ -1070,14 +1164,18 @@ Sample response (in JSON format):
 =cut
 
 sub get_info_about_scheduled_task {
-	my ($self, $task_id) = @_;
-	assert_nonblank( $task_id, 'task_id is not defined or is blank');
-	$log->tracef('Entering get_info_about_scheduled_task(%s)', $task_id);
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			'id' => { type => SCALAR, }, # task id.
+		}
+	);
+	$log->tracef('Entering get_info_about_scheduled_task(%s)', \%params);
 
 	my $connection = $self->{'connection'};
 	my ($http_status_code, $response_message) = $connection->perform_iron_action(
 			IO::Iron::IronWorker::Api::IRONWORKER_GET_INFO_ABOUT_A_SCHEDULED_TASK(),
-			{ '{Schedule ID}' => $task_id, }
+			{ '{Schedule ID}' => $params{'id'}, }
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
 	my $info = $response_message;

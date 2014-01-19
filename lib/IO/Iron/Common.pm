@@ -22,11 +22,11 @@ IO::Iron::Common - Common routines for Client Libraries to Iron services IronCac
 
 =head1 VERSION
 
-Version 0.04
+Version 0.05
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 
 =head1 REQUIREMENTS
@@ -41,6 +41,7 @@ use File::HomeDir ();
 use Hash::Util qw{lock_keys unlock_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';
+use Params::Validate qw(:all);
 
 
 =head1 FUNCTIONS
@@ -48,6 +49,35 @@ use English '-no_match_vars';
 Internal functions for use in the Client objects.
 
 =cut
+
+=head2 IRON_CONFIG_KEYS
+
+=cut
+
+sub IRON_CONFIG_KEYS {
+	return (
+		'project_id',       # The ID of the project to use for requests.
+		'token',            # The OAuth token that should be used to authenticate requests. Can be found in the HUD.
+		'host',             # The domain name the API can be located at. Defaults to a product-specific value, but always using Amazon's cloud.
+		'protocol',         # The protocol that will be used to communicate with the API. Defaults to "https", which should be sufficient for 99% of users.
+		'port',             # The port to connect to the API through. Defaults to 443, which should be sufficient for 99% of users.
+		'api_version',      # The version of the API to connect through. Defaults to the version supported by the client. End-users should probably never change this.
+		'host_path_prefix', # Path prefix to the RESTful url. Defaults to '/1'. Used with non-standard clouds/emergency service back up addresses.
+		'timeout',          # REST client timeout (for REST calls accessing IronMQ). N.B. This is not a IronMQ config option! It only configures client this client.
+	);
+}
+
+=head2 IRON_CLIENT_PARAMETERS
+
+=cut
+
+sub IRON_CLIENT_PARAMETERS {
+	return (
+			IRON_CONFIG_KEYS(),
+			'config',            # The config file name.
+			'connector',         # Pointer to a preinitiated connector object.
+	);
+}
 
 =head2 get_config
 
@@ -76,39 +106,31 @@ Return: ref to %config.
 
 =cut
 
-sub get_config {
-	my ($params) = @_;
-	$log->tracef('Entering get_config(%s)', $params);
-	my $config = { 'project_id' => undef, 'token' => undef, 'host' => undef, 'host_path_prefix' => undef, 'protocol' => undef, 'port' => undef, 'api_version' => undef, 'timeout' => undef };
-	my @config_keys = ( ## no critic (CodeLayout::ProhibitQuotedWordLists)
-			'project_id',  # The ID of the project to use for requests.
-			'token',       # The OAuth token that should be used to authenticate requests. Can be found in the HUD.
-			'host',        # The domain name the API can be located at. Defaults to a product-specific value, but always using Amazon's cloud.
-			'protocol',    # The protocol that will be used to communicate with the API. Defaults to "https", which should be sufficient for 99% of users.
-			'port',        # The port to connect to the API through. Defaults to 443, which should be sufficient for 99% of users.
-			'api_version', # The version of the API to connect through. Defaults to the version supported by the client. End-users should probably never change this.
-			'host_path_prefix', # Path prefix to the RESTful url. Defaults to '/1'. Used with non-standard clouds/emergency service back up addresses.
-			'timeout',     # REST client timeout (for REST calls accessing IronMQ). N.B. This is not a IronMQ config option! It only configures client this client.
+sub get_config { ## no critic (Subroutines::RequireArgUnpacking)
+	my %params = validate(
+		@_, {
+			map { $_ => { type => SCALAR, optional => 1 }, } IRON_CONFIG_KEYS(), ## no critic (ValuesAndExpressions::ProhibitCommaSeparatedStatements)
+			'config' => { type => SCALAR, optional => 1, },
+		}
 	);
-	lock_keys(%{$config}, @config_keys);
-	_read_iron_config_file($config, File::Spec->catfile(File::HomeDir->my_home, '.iron.json')); # Homedir
-	_read_iron_config_env_vars($config); # Global envs
-	_read_iron_config_file($config, File::Spec->catfile(File::Spec->curdir(), 'iron.json')); # current dir
-	if(defined $params->{'config'}) { # config file specified when creating the class, if given.
-		_read_iron_config_file($config,
-				File::Spec->file_name_is_absolute($params->{'config'})
-				? $params->{'config'} : File::Spec->catfile(File::Spec->curdir(), $params->{'config'})
+	$log->tracef('Entering get_config(%s)', \%params);
+	my %config = ( map { $_ => undef } IRON_CONFIG_KEYS() ); ## preset config keys.
+	lock_keys(%config, IRON_CONFIG_KEYS());
+	_read_iron_config_file(\%config, File::Spec->catfile(File::HomeDir->my_home, '.iron.json')); # Homedir
+	_read_iron_config_env_vars(\%config); # Global envs
+	_read_iron_config_file(\%config, File::Spec->catfile(File::Spec->curdir(), 'iron.json')); # current dir
+	if(defined $params{'config'}) { # config file specified when creating the class, if given.
+		_read_iron_config_file(\%config,
+				File::Spec->file_name_is_absolute($params{'config'})
+				? $params{'config'} : File::Spec->catfile(File::Spec->curdir(), $params{'config'})
 				);
 	}
-	# The parameters given when the object was created.
-	foreach my $config_key (keys %{$config}) {
-		if (defined $params->{$config_key}) {
-			$config->{$config_key} = $params->{$config_key};
-		}
-	}
+	# The parameters given when the object was created, except 'config'
+	my @copy_param_keys = grep { !/^config$/msx} keys %params;
+	@config{@copy_param_keys} = @params{@copy_param_keys};
 
-	$log->tracef('Exiting get_config: %s', $config);
-	return $config;
+	$log->tracef('Exiting get_config: %s', \%config);
+	return \%config;
 }
 
 # Replace the existing values in $config if new environment variables found.

@@ -22,11 +22,11 @@ IO::Iron::IronMQ::Client - IronMQ (Message Queue) Client.
 
 =head1 VERSION
 
-Version 0.04
+Version 0.05
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 
 =head1 SYNOPSIS
@@ -367,7 +367,7 @@ sub new {
 	);
 	unlock_keys(%{$self});
 	lock_keys_plus(%{$self}, @self_keys);
-	my $config = IO::Iron::Common::get_config($params);
+	my $config = IO::Iron::Common::get_config(%{$params}); # TODO Temp fix for the named parameters scheme
 	$log->debugf('The config: %s', $config);
 	$self->{'project_id'} = defined $config->{'project_id'} ? $config->{'project_id'} : undef;
 	$self->{'queues'} = [];

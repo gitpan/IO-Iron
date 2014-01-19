@@ -51,7 +51,7 @@
             "Hash::Util" : "0",
             "JSON" : "2.53",
             "Log::Any" : "0.15",
-            "MIME::Base64" : "3.13",
+            "Params::Validate" : "1.08",
             "REST::Client" : "88",
             "Scalar::Util" : "0",
             "Try::Tiny" : "0.18",
@@ -61,5 +61,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.04"
+   "version" : "0.05"
 }

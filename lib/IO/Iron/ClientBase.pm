@@ -23,11 +23,11 @@ to Iron services IronCache, IronMQ and IronWorker.
 
 =head1 VERSION
 
-Version 0.04
+Version 0.05
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =head1 SYNOPSIS
 
@@ -37,7 +37,7 @@ our $VERSION = '0.04';
 		my ($class, $params) = @_;
 		my $self = IO::Iron::ClientBase->new();
 		# Add more keys to the self hash.
-		my @self_keys = ( ## no critic (CodeLayout::ProhibitQuotedWordLists)
+		my @self_keys = (
 				'caches',        # References to all objects created of class IO::Iron::IronCache::Cache.
 				legal_keys(%{$self}),
 		);

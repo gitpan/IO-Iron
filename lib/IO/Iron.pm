@@ -26,11 +26,24 @@ IO::Iron - Client Libraries to Iron services IronCache, IronMQ and IronWorker.
 
 =head1 VERSION
 
-Version 0.04
+Version 0.05
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
+
+
+=head1 STATUS
+
+Iron.io libraries are currently being developed so changes in the API are
+possible.
+
+
+=head1 TESTING
+
+To run the tests that come with this distribution you need an Iron.io
+account.
+
 
 =head1 SYNOPSIS
 
@@ -44,14 +57,17 @@ our $VERSION = '0.04';
     my $iron_cache_client = ironcache( config => 'iron_cache.json' );
     my @iron_caches = $iron_cache_client->get_caches();
 
+    my $iron_worker_client = ironworker( config => 'iron_worker.json' );
+    my @iron_codes = $iron_worker_client->list_code_packages();
+
 
 =head1 REQUIREMENTS
 
-The IO::Iron::* packages require the following packages (in addition to Perl core packages):
+The IO::Iron::* packages require the following packages (in addition to several Perl core packages):
 
 =over 8
 
-=item Carp::Assert', v. 0.20
+=item Carp::Assert, v. 0.20
 
 =item Carp::Assert::More, v. 1.12
 
@@ -74,6 +90,8 @@ The IO::Iron::* packages require the following packages (in addition to Perl cor
 =item Try::Tiny, v. 0.18
 
 =item URI::Escape, v. 3.31
+
+=item Params::Validate, v. 1.08
 
 =back
 
@@ -196,7 +214,7 @@ Create an IronWorker client object and return it to user.
 
 sub ironworker {
 	my (%params) = @_;
-	return IO::Iron::IronWorker::Client->new( \%params );
+	return IO::Iron::IronWorker::Client->new( %params );
 }
 
 

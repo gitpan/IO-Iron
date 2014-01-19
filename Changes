@@ -1,5 +1,11 @@
 Revision history for IO-Iron
 
+0.05    2013-Dec-04
+        IronWorker API changed to use named parameters.
+
+0.04    2013-Dec-04
+        Complete IronWorker
+
 0.03    2013-Dec-04
         Fixed some parts of documentation.
 

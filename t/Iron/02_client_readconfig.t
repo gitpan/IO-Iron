@@ -11,10 +11,10 @@ use File::Copy 'move';
 
 plan tests => 7;
 
-require IO::Iron::IronMQ::Client;
+require IO::Iron::IronWorker::Client;
 
 
-diag("Testing IO::Iron::IronMQ $IO::Iron::IronMQ::Client::VERSION, Perl $], $^X");
+diag("Testing IO::Iron::IronMQ $IO::Iron::IronWorker::Client::VERSION, Perl $], $^X");
 
 
 #use Log::Any::Adapter ('Stderr'); # Activate to get all log messages.
@@ -74,18 +74,18 @@ open DIFFDIR_HANDLE, '>', $iron_extra_file_name;
 print DIFFDIR_HANDLE encode_json($iron_extra_file_hash);
 close DIFFDIR_HANDLE;
 
-my $ironmq = IO::Iron::IronMQ::Client->new( { 
+my $ironworker = IO::Iron::IronWorker::Client->new(
 		'config' => $iron_extra_file_name, 
 		'port' => '10005', 'api_version' => '5' 
-		} );
+		);
 
-is($ironmq->{'connection'}->{'api_version'}, 5, "Config is OK. (api_version)");
-is($ironmq->{'connection'}->{'port'}, 10005, "Config is OK. (port)");
-is($ironmq->{'connection'}->{'protocol'}, 'Extra_file_protocol', "Config is OK. (protocol)");
-is($ironmq->{'connection'}->{'host'}, 'Local_file_host', "Config is OK. (host)");
-is($ironmq->{'connection'}->{'token'}, 'Global_env_token', "Config is OK (token).");
-is($ironmq->{'connection'}->{'project_id'}, 'Global_file_project_id', "Config is OK. (project_id)");
-is($ironmq->{'connection'}->{'timeout'}, 23, "Config is OK. (timeout)");
+is($ironworker->{'connection'}->{'api_version'}, 5, "Config is OK. (api_version)");
+is($ironworker->{'connection'}->{'port'}, 10005, "Config is OK. (port)");
+is($ironworker->{'connection'}->{'protocol'}, 'Extra_file_protocol', "Config is OK. (protocol)");
+is($ironworker->{'connection'}->{'host'}, 'Local_file_host', "Config is OK. (host)");
+is($ironworker->{'connection'}->{'token'}, 'Global_env_token', "Config is OK (token).");
+is($ironworker->{'connection'}->{'project_id'}, 'Global_file_project_id', "Config is OK. (project_id)");
+is($ironworker->{'connection'}->{'timeout'}, 23, "Config is OK. (timeout)");
 
 
 # Clean up after us, delete the extra files.
