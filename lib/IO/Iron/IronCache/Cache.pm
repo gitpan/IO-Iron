@@ -2,6 +2,8 @@ package IO::Iron::IronCache::Cache;
 
 ## no critic (Documentation::RequirePodAtEnd)
 ## no critic (Documentation::RequirePodSections)
+## no critic (ControlStructures::ProhibitPostfixControls)
+## no critic (Subroutines::RequireArgUnpacking)
 
 use 5.008_001;
 use strict;
@@ -22,11 +24,11 @@ IO::Iron::IronCache::Cache - IronCache (Online Item-Value Storage) Client (Cache
 
 =head1 VERSION
 
-Version 0.05
+Version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 
 =head1 SYNOPSIS
@@ -41,6 +43,7 @@ use Log::Any  qw($log);
 use Hash::Util qw{lock_keys unlock_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';
+use Params::Validate qw(:all);
 
 use IO::Iron::Common;
 use IO::Iron::IronCache::Api;
@@ -88,27 +91,32 @@ sub new {
 	return $blessed_ref;
 }
 
-=head2 name
+=head2 Getters/setters
 
-=over
+Set or get a property.
+When setting, returns the reference to the object.
 
-=item Set or get name.
+=over 8
+
+=item name         Cache name.
 
 =back
 
 =cut
 
-sub name {
-	my ($self, $name) = @_;
-	$log->tracef('Entering name(%s)', $name);
-	if( defined $name ) {
-		$self->{'name'} = $name;
-		$log->tracef('Exiting name:%d', 1);
-		return 1;
+sub name { return $_[0]->_access_internal('name', $_[1]); }
+
+# TODO Move _access_internal() to IO::Iron::Common.
+
+sub _access_internal {
+	my ($self, $var_name, $var_value) = @_;
+	$log->tracef('_access_internal(%s, %s)', $var_name, $var_value);
+	if( defined $var_value ) {
+		$self->{$var_name} = $var_value;
+		return $self;
 	}
 	else {
-		$log->tracef('Exiting name:%s', $self->{'name'});
-		return $self->{'name'};
+		return $self->{$var_name};
 	}
 }
 
@@ -129,10 +137,15 @@ Deletes all items in an IronCache cache.
 =cut
 
 sub clear {
-	my ($self) = @_;
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			# No parameters
+		}
+	);
 	$log->tracef('Entering clear()');
 
-	my $cache_name = $self->name;
+	my $cache_name = $self->name();
 	my $connection = $self->{'connection'};
 	my ($http_status_code, $response_message) = $connection->perform_iron_action(
 			IO::Iron::IronCache::Api::IRONCACHE_CLEAR_A_CACHE(),
@@ -161,24 +174,28 @@ sub clear {
 =cut
 
 sub put {
-	my ($self, $key, $item) = @_;
-	assert_nonblank( $key, 'Parameter key is defined and is not blank.' );
-	assert_isa( $item, 'IO::Iron::IronCache::Item' , 'Parameter item is IO::Iron::IronCache::Item.');
-	$log->tracef('Entering put(%s, %s)', $key, $item);
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			'key' => { type => SCALAR, }, # cache item key.
+			'item' => { isa => 'IO::Iron::IronCache::Item', }, # cache item.
+		}
+	);
+	$log->tracef('Entering put(%s)', \%params);
 
-	my $cache_name = $self->name;
+	my $cache_name = $self->name();
 	my $connection = $self->{'connection'};
 	my %item_body;
 	foreach my $field_name (keys %{ IO::Iron::IronCache::Api::IRONCACHE_PUT_AN_ITEM_INTO_A_CACHE()->{'request_fields'}}) {
-		if (defined $item->{$field_name}) {
-			$item_body{$field_name} = $item->{$field_name};
+		if (defined $params{'item'}->{$field_name}) {
+			$item_body{$field_name} = $params{'item'}->{$field_name};
 		};
 	}
 	my ($http_status_code, $response_message) = $connection->perform_iron_action(
 			IO::Iron::IronCache::Api::IRONCACHE_PUT_AN_ITEM_INTO_A_CACHE(),
 			{
 				'{Cache Name}' => $cache_name,
-				'{Key}'        => $key,
+				'{Key}'        => $params{'key'},
 				'body'         => \%item_body,
 			}
 		);
@@ -203,20 +220,26 @@ sub put {
 =cut
 
 sub increment {
-	my ($self, $key, $amount) = @_;
-	assert_nonblank( $key, 'key is defined and is not blank.' );
-	assert_integer( $amount, 'amount is integer.');
-	$log->tracef('Entering increment(%s, %s)', $key, $amount);
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			'key' => { type => SCALAR, }, # cache item key.
+			'increment' => { type => SCALAR, }, # cache item increment.
+		}
+	);
+	assert_nonblank( $params{'key'}, 'key is defined and is not blank.' );
+	assert_integer( $params{'increment'}, 'increment amount is integer.');
+	$log->tracef('Entering put(%s)', \%params);
 
-	my $cache_name = $self->name;
+	my $cache_name = $self->name();
 	my $connection = $self->{'connection'};
 	my %item_body;
-	$item_body{'amount'} = $amount;
+	$item_body{'amount'} = $params{'increment'};
 	my ($http_status_code, $response_message) = $connection->perform_iron_action(
 			IO::Iron::IronCache::Api::IRONCACHE_INCREMENT_AN_ITEMS_VALUE(),
 			{
 				'{Cache Name}' => $cache_name,
-				'{Key}'        => $key,
+				'{Key}'        => $params{'key'},
 				'body'         => \%item_body,
 			}
 		);
@@ -242,28 +265,32 @@ sub increment {
 =cut
 
 sub get {
-	my ($self, $key) = @_;
-	assert_nonblank( $key, 'key is defined and is not blank.' );
-	$log->tracef('Entering get(%s)', $key);
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			'key' => { type => SCALAR, }, # cache item key.
+		}
+	);
+	assert_nonblank( $params{'key'}, 'key is defined and is not blank.' );
+	$log->tracef('Entering get(%s)', \%params);
 
-	my $cache_name = $self->name;
+	my $cache_name = $self->name();
 	my $connection = $self->{'connection'};
 	my ($http_status_code, $response_message) = $connection->perform_iron_action(
 			IO::Iron::IronCache::Api::IRONCACHE_GET_AN_ITEM_FROM_A_CACHE(),
 			{
 				'{Cache Name}' => $cache_name,
-				'{Key}'        => $key,
+				'{Key}'        => $params{'key'},
 			}
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
-	my $item_cache = $response_message->{'cache'};
-	my $item_key = $response_message->{'key'};
-	my $item_value = $response_message->{'value'};
-	my $item_cas = $response_message->{'cas'};
-	my $new_item = IO::Iron::IronCache::Item->new( {
-		'value' => $item_value,
-		'cas' => $item_cas,
-	});
+	my $new_item = IO::Iron::IronCache::Item->new(
+		'value' => $response_message->{'value'},
+		'cas' => $response_message->{'cas'},
+	);
+	$new_item->expires_in($response_message->{'expires_in'}) if defined $response_message->{'expires_in'};
+	$new_item->replace($response_message->{'replace'}) if defined $response_message->{'replace'};
+	$new_item->add($response_message->{'add'}) if defined $response_message->{'add'};
 
 	$log->tracef('Exiting get: %s', $new_item);
 	return $new_item;
@@ -284,17 +311,22 @@ sub get {
 =cut
 
 sub delete { ## no critic (Subroutines::ProhibitBuiltinHomonyms)
-	my ($self, $key) = @_;
-	assert_nonblank( $key, 'key is defined and is not blank.' );
-	$log->tracef('Entering delete(%s)', $key);
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			'key' => { type => SCALAR, }, # cache item key.
+		}
+	);
+	assert_nonblank( $params{'key'}, 'key is defined and is not blank.' );
+	$log->tracef('Entering delete(%s)', \%params);
 
-	my $cache_name = $self->name;
+	my $cache_name = $self->name();
 	my $connection = $self->{'connection'};
 	my ($http_status_code, $response_message) = $connection->perform_iron_action(
 			IO::Iron::IronCache::Api::IRONCACHE_DELETE_AN_ITEM_FROM_A_CACHE(),
 			{
 				'{Cache Name}' => $cache_name,
-				'{Key}'        => $key,
+				'{Key}'        => $params{'key'},
 			}
 		);
 	$self->{'last_http_status_code'} = $http_status_code;

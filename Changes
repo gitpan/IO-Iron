@@ -1,5 +1,8 @@
 Revision history for IO-Iron
 
+0.06    2014-Feb-23
+        IronCache API changed to use named parameters.
+
 0.05    2013-Dec-04
         IronWorker API changed to use named parameters.
 

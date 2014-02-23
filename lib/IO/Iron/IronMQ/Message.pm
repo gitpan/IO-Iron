@@ -21,11 +21,11 @@ IO::Iron::IronMQ::Message - IronMQ (Message Queue) Client (Message).
 
 =head1 VERSION
 
-Version 0.05
+Version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 
 =head1 SYNOPSIS

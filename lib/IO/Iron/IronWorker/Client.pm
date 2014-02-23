@@ -24,11 +24,11 @@ IO::Iron::IronWorker::Client - IronWorker Client.
 
 =head1 VERSION
 
-Version 0.05
+Version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 
 =head1 SYNOPSIS
@@ -43,12 +43,12 @@ our $VERSION = '0.05';
 	my $unique_code_package_name = 'HelloWorldCode';
 	my $worker_as_zip; # Zipped Perl script and dependencies.
 	my $unique_code_executable_file_name = 'HelloWorldCode.pl';
-	my $uploaded = $iron_worker_client->update_code_package( { 
+	my $uploaded = $iron_worker_client->update_code_package(
 		'name' => $unique_code_package_name,
 		'file' => $worker_as_zip,
 		'file_name' => $unique_code_executable_file_name,
 		'runtime' => 'perl',
-	} );
+	);
 
 	my $code_package_id;
 	my @code_packages = $iron_worker_client->list_code_packages();
@@ -64,46 +64,43 @@ our $VERSION = '0.05';
 	my @code_package_revisions = $iron_worker_client->list_code_package_revisions( 'id' => $code_package_id );
 
 	my $downloaded = $iron_worker_client->download_code_package( 
-		$code_package_id, { 
-			'revision' => 1,
-		} );
+		'id' => $code_package_id,
+		'revision' => 1,
+	);
 
-	my $delete_rval = $iron_worker_client->delete( $code_package_id );
+	my $delete_rval = $iron_worker_client->delete( 'id' => $code_package_id );
 
 	# Tasks
 	my $task_payload = 'Task payload (can be JSONized)';
 	my $task = $iron_worker_client->create_task(
-			$unique_code_package_name,
-			$task_payload,
-			{
-				'priority' => 0,
-				#
-				# additional parameters for a task:
-				# 'priority',        # The priority queue to run the task in. Valid values are 0, 1, and 2. 0 is the default.
-				# 'timeout',         # The maximum runtime of your task in seconds.
-				# 'delay',           # The number of seconds to delay before actually queuing the task. Default is 0.
-				# For scheduled task:
-				# 'priority',        # The priority queue to run the task in. Valid values are 0, 1, and 2. 0 is the default.
-				# 'run_every',       # The amount of time, in seconds, between runs
-				# 'end_at',          # The time tasks will stop being queued. Should be a time or datetime.
-				# 'run_times',       # The number of times a task will run.
-				# 'start_at',        # The time the scheduled task should first be run.
-				# 'name',            # Name of task or scheduled task.
-			}
+		'code_name' => $unique_code_package_name,
+		'payload'   => $task_payload,
+		#
+		# additional parameters for a task:
+		# 'priority',        # The priority queue to run the task in. Valid values are 0, 1, and 2. 0 is the default.
+		# 'timeout',         # The maximum runtime of your task in seconds.
+		# 'delay',           # The number of seconds to delay before actually queuing the task. Default is 0.
+		# For scheduled task:
+		# 'priority',        # The priority queue to run the task in. Valid values are 0, 1, and 2. 0 is the default.
+		# 'run_every',       # The amount of time, in seconds, between runs
+		# 'end_at',          # The time tasks will stop being queued. Should be a time or datetime.
+		# 'run_times',       # The number of times a task will run.
+		# 'start_at',        # The time the scheduled task should first be run.
+		# 'name',            # Name of task or scheduled task.
 	);
 
 	# When queuing, the task object is updated with returned id.
-	my $task_id = $iron_worker_client->queue($task);
+	my $task_id = $iron_worker_client->queue( 'tasks' => $task );
 	# Or:
-	my @task_ids = $iron_worker_client->queue($task1, $task2);
+	my @task_ids = $iron_worker_client->queue( 'tasks' => [ $task1, $task2 ] );
 	# Or: 
-	my $number_of_tasks_queued = $iron_worker_client->queue($task1, $task2);
+	my $number_of_tasks_queued = $iron_worker_client->queue( 'tasks' => [ $task1, $task2 ] );
 	#
 	my $task_id = $task->id();
-	my $task_info = $iron_worker_client->get_info_about_task($task_id);
+	my $task_info = $iron_worker_client->get_info_about_task( 'id' => $task_id );
 	until ($task_info->{'status'} =~ /(complete|error|killed|timeout)/) {
 		sleep 3;
-		$task_info = $iron_worker_client->get_info_about_task($task_id);
+		$task_info = $iron_worker_client->get_info_about_task( 'id' => $task_id );
 	}
 	# $task->status() updates the task's information.
 	my $task_duration = $task->duration();
@@ -118,40 +115,38 @@ our $VERSION = '0.05';
 	my $retried = $task->retry();
 	$task_id = $task->id(); # New task id after retry().
 
-	my $task_info = $iron_worker_client->get_info_about_task( $task_id );
+	my $task_info = $iron_worker_client->get_info_about_task( 'id' => $task_id );
 
 	# Schedule task.
 	my $schedule_task = $iron_worker_client->create_task(
 		$unique_code_package_name,
 		$task_payload,
-		{
-			'priority' => 0,
-			'run_every' => 120, # Every two minutes.
-		}
+		'priority' => 0,
+		'run_every' => 120, # Every two minutes.
 	);
 	$schedule_task->run_times(5);
 	my $end_dt = DateTime::...
 	$schedule_task->end_at($end_dt);
 	$schedule_task->start_at($end_dt);
 	# When scheduling, the task object is updated with returned id.
-	$schedule_task = $iron_worker_client->schedule($schedule_task);
+	$schedule_task = $iron_worker_client->schedule( 'tasks' => $schedule_task);
 	# Or:
-	my @scheduled_tasks = $iron_worker_client->schedule($schedule_task1, $schedule_task2);
+	my @scheduled_tasks = $iron_worker_client->schedule( 'tasks' => [$schedule_task1, $schedule_task2] );
 	# Or: 
-	my $number_of_scheduled_tasks = $iron_worker_client->schedule($schedule_task1, $schedule_task2);
+	my $number_of_scheduled_tasks = $iron_worker_client->schedule( 'tasks' => [$schedule_task1, $schedule_task2] );
 	#
 
-	my $scheduled_task_info = $iron_worker_client->get_info_about_scheduled_task( $task_id );
+	my $scheduled_task_info = $iron_worker_client->get_info_about_scheduled_task( 'id' => $task_id );
 	
 
 	my $from_time = time - (24*60*60);
 	my $to_time = time - (1*60*60);
-	my @tasks = $iron_worker_client->tasks( { 
+	my @tasks = $iron_worker_client->tasks(
 		'code_name' => $unique_code_package_name, # Mandatory
 		'status' => qw{queued running complete error cancelled killed timeout},
 		'from_time' => $from_time, # Number of seconds since the Unix epoc
 		'to_time' => $to_time, # Number of seconds since the Unix epoc
-	});
+	);
 	
 	my @scheduled_tasks = $iron_worker_client->scheduled_tasks();
 
@@ -345,9 +340,9 @@ object, normally JSON.
 
 	my $task_payload = 'Task payload (could be JSONized object)';
 	my $task = $iron_worker_client->create_task(
-			'code_name' => $unique_code_package_name,
-			'payload' => $task_payload,
-			'priority' => 0,
+		'code_name' => $unique_code_package_name,
+		'payload' => $task_payload,
+		'priority' => 0,
 	);
 	my $task_code_package_name = $task->code_package_name();
 
@@ -362,7 +357,7 @@ the task object is updated with returned id.
 	# Or: 
 	my $number_of_tasks_queued = $iron_worker_client->queue(
 		'task' => [$task1, $task2],
-		);
+	);
 
 Read the STDOUT log of the task.
 
@@ -406,17 +401,17 @@ Schedule the task or tasks. When scheduling, the task object is updated with ret
 	# Or:
 	my @scheduled_tasks = $iron_worker_client->schedule(
 		'task' => [$schedule_task1, $schedule_task2]
-		);
+	);
 	# Or: 
 	my $number_of_scheduled_tasks = $iron_worker_client->schedule(
 		'task' => [$schedule_task1, $schedule_task2]
-		);
+	);
 
 Get information about the scheduled task.
 
 	my $scheduled_task_info = $iron_worker_client->get_info_about_scheduled_task(
 		'id' => $task_id
-		);
+	);
 
 Get all scheduled tasks as IO::Iron::IronWorker::Task objects.
 

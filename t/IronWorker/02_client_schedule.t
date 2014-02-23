@@ -45,7 +45,7 @@ subtest 'Setup for testing' => sub {
 
 	# Create a new code package name.
 	$unique_code_package_name_01    = common::create_unique_code_package_name();
-	$unique_code_executable_name_01 = $unique_code_package_name_01 . '.pl';
+	$unique_code_executable_name_01 = $unique_code_package_name_01 . '.sh';
 
 	my $zip           = Archive::Zip->new();
 	my $string_member =

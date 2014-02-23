@@ -22,11 +22,11 @@ IO::Iron::IronMQ::Api - IronMQ API reference for Perl Client Libraries!
 
 =head1 VERSION
 
-Version 0.05
+Version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 
 =head1 SYNOPSIS
@@ -138,6 +138,26 @@ sub IRONMQ_CLEAR_ALL_MESSAGES_FROM_A_QUEUE {
 			'request_fields' => {},
 			'url_escape'   => { '{Project ID}' => 1, '{Queue Name}' => 1 },
 			'log_message'  => '(project={Project ID}, queue={Queue Name}). Cleared all messages from the queue.',
+		};
+}
+
+=head3 IRONMQ_SET_ALERTS_TO_A_QUEUE
+
+/projects/{Project ID}/queues/{Queue Name}/alerts/
+
+=cut
+
+sub IRONMQ_SET_ALERTS_TO_A_QUEUE {
+	return {
+			'action_name'  => 'IRONMQ_SET_ALERTS_TO_A_QUEUE',
+			'href'         => '{Protocol}://{Host}:{Port}{Host Path Prefix}/projects/{Project ID}/queues/{Queue Name}/alerts',
+			'action'       => 'POST',
+			'return'       => 'MESSAGE',
+			'retry'        => 1,
+			'require_body' => 1,
+			'request_fields' => { 'alerts' => 1 },
+			'url_escape'   => { '{Project ID}' => 1, '{Queue Name}' => 1 },
+			'log_message'  => '(project={Project ID}, queue={Queue Name}). Set alerts to the queue.',
 		};
 }
 

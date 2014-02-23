@@ -2,6 +2,7 @@ package IO::Iron::IronCache::Item;
 
 ## no critic (Documentation::RequirePodAtEnd)
 ## no critic (Documentation::RequirePodSections)
+## no critic (Subroutines::RequireArgUnpacking)
 
 use 5.008_001;
 use strict;
@@ -22,11 +23,11 @@ IO::Iron::IronCache::Item - IronCache (Online Item-Value Storage) Client (Cache 
 
 =head1 VERSION
 
-Version 0.05
+Version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 
 =head1 SYNOPSIS
@@ -41,6 +42,7 @@ use Log::Any  qw($log);
 use Hash::Util qw{lock_keys unlock_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';
+use Params::Validate qw(:all);
 
 # CONSTANTS for this module
 
@@ -55,8 +57,17 @@ Creator function.
 =cut
 
 sub new {
-	my ($class, $params) = @_;
-	$log->tracef('Entering new(%s, %s)', $class, $params);
+	my $class = shift;
+	my %params = validate(
+		@_, {
+			'value' => { type => SCALAR, },        # Item value (free text), mandatory, can be empty.
+			'expires_in' => { type => SCALAR, optional => 1, },   # How long in seconds to keep the item in the cache before it is deleted.
+			'replace' => { type => SCALAR, optional => 1, },      # Only set the item if the item is already in the cache.
+			'add' => { type => SCALAR, optional => 1, },          # Only set the item if the item is not already in the cache.
+			'cas' => { type => SCALAR, optional => 1, },          # Cas value can only be set when the item is read from the cache.
+		}
+	);
+	$log->tracef('Entering new(%s, %s)', $class, %params);
 	my $self;
 	my @self_keys = ( ## no critic (CodeLayout::ProhibitQuotedWordLists)
 			'value',        # Item value (free text), can be empty.
@@ -66,11 +77,11 @@ sub new {
 			'cas',          # Cas value can only be set when the item is read from the cache.
 	);
 	lock_keys(%{$self}, @self_keys);
-	$self->{'value'} = defined $params->{'value'} ? $params->{'value'} : undef;
-	$self->{'expires_in'} = defined $params->{'expires_in'} ? $params->{'expires_in'} : undef;
-	$self->{'replace'} = defined $params->{'replace'} ? $params->{'replace'} : undef;
-	$self->{'add'} = defined $params->{'add'} ? $params->{'add'} : undef;
-	$self->{'cas'} = defined $params->{'cas'} ? $params->{'cas'} : undef;
+	$self->{'value'} = defined $params{'value'} ? $params{'value'} : undef;
+	$self->{'expires_in'} = defined $params{'expires_in'} ? $params{'expires_in'} : undef;
+	$self->{'replace'} = defined $params{'replace'} ? $params{'replace'} : undef;
+	$self->{'add'} = defined $params{'add'} ? $params{'add'} : undef;
+	$self->{'cas'} = defined $params{'cas'} ? $params{'cas'} : undef;
 	# All of the above can be undefined, except the value.
 	assert_defined( $self->{'value'}, 'self->{value} is defined and is not blank.' );
 	# If timeout, add or expires_in are undefined, the IronMQ defaults (at the server) will be used.
@@ -83,95 +94,44 @@ sub new {
 	return $blessed_ref;
 }
 
-=head2 value
+=head2 Getters/setters
 
-Set or get value.
+Set or get a property.
+When setting, returns the reference to the object.
 
-=cut
+=over 8
 
-sub value {
-	my ($self, $value) = @_;
-	$log->tracef('Entering value()');
-	if( defined $value ) {
-		$self->{'value'} = $value;
-		return 1;
-	}
-	else {
-		return $self->{'value'};
-	}
-}
+=item value        Item value (free text), can be empty.
 
-#sub value { defined $_[1] ? $_[0]->{'value'} = $_[1], 1 : $_[0]->{'value'}; }
+=item expires_in   How long in seconds to keep the item in the cache before it is deleted.
 
-=head2 expires_in
+=item replace      Only set the item if the item is already in the cache.
 
-Set or get expires_in.
+=item add          Only set the item if the item is not already in the cache.
+
+=item cas          Cas value can only be set when the item is read from the cache.
+
+=back
 
 =cut
 
-sub expires_in {
-	my ($self, $expires_in) = @_;
-	$log->tracef('Entering expires_in()');
-	if( defined $expires_in ) {
-		$self->{'expires_in'} = $expires_in;
-		return 1;
+sub value { return $_[0]->_access_internal('value', $_[1]); }
+sub expires_in { return $_[0]->_access_internal('expires_in', $_[1]); }
+sub replace { return $_[0]->_access_internal('replace', $_[1]); }
+sub add { return $_[0]->_access_internal('add', $_[1]); }
+sub cas { return $_[0]->_access_internal('cas', $_[1]); }
+
+# TODO Move _access_internal() to IO::Iron::Common.
+
+sub _access_internal {
+	my ($self, $var_name, $var_value) = @_;
+	$log->tracef('_access_internal(%s, %s)', $var_name, $var_value);
+	if( defined $var_value ) {
+		$self->{$var_name} = $var_value;
+		return $self;
 	}
 	else {
-		return $self->{'expires_in'};
-	}
-}
-
-=head2 replace
-
-Set or get replace.
-
-=cut
-
-sub replace {
-	my ($self, $replace) = @_;
-	$log->tracef('Entering timeout()');
-	if( defined $replace ) {
-		$self->{'replace'} = $replace;
-		return 1;
-	}
-	else {
-		return $self->{'replace'};
-	}
-}
-
-=head2 add
-
-Set or get add.
-
-=cut
-
-sub add {
-	my ($self, $add) = @_;
-	$log->tracef('Entering add()');
-	if( defined $add ) {
-		$self->{'add'} = $add;
-		return 1;
-	}
-	else {
-		return $self->{'add'};
-	}
-}
-
-=head2 cas
-
-Set or get cas.
-
-=cut
-
-sub cas {
-	my ($self, $cas) = @_;
-	$log->tracef('Entering cas()');
-	if( defined $cas ) {
-		$self->{'cas'} = $cas;
-		return 1;
-	}
-	else {
-		return $self->{'cas'};
+		return $self->{$var_name};
 	}
 }
 

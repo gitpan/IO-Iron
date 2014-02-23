@@ -2,6 +2,7 @@ package IO::Iron::IronCache::Client;
 
 ## no critic (Documentation::RequirePodAtEnd)
 ## no critic (Documentation::RequirePodSections)
+## no critic (Subroutines::RequireArgUnpacking)
 
 use 5.008_001;
 use strict;
@@ -22,42 +23,42 @@ IO::Iron::IronCache::Client - IronCache (Online Item-Value Storage) Client.
 
 =head1 VERSION
 
-Version 0.05
+Version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 
 =head1 SYNOPSIS
 
 	require IO::Iron::IronCache::Client;
 	require IO::Iron::IronCache::Item;
-	my $ironcache_client = IO::Iron::IronCache::Client->new( {} );
+	my $ironcache_client = IO::Iron::IronCache::Client->new();
 	# or
 	use IO::Iron qw(get_ironcache);
 	my $ironcache_client = get_ironcache();
 	
 	# Operate with caches.	
 	my @iron_caches = $ironcache_client->get_caches();
-	my $iron_cache = $ironcache_client->create_cache('My_Iron_Cache');
+	my $iron_cache = $ironcache_client->create_cache('name' => 'My_Iron_Cache');
 	# Or get an existing cache.
-	my $iron_cache = $ironcache_client->get_cache('My_Iron_Cache');
-	my $cache_deleted = $ironcache_client->delete_cache('My_Iron_Cache');
-	my $info = $ironcache_client->get_info_about_cache('My_Iron_Cache');
+	my $iron_cache = $ironcache_client->get_cache('name' => 'My_Iron_Cache');
+	my $cache_deleted = $ironcache_client->delete_cache('name' => 'My_Iron_Cache');
+	my $info = $ironcache_client->get_info_about_cache('name' => 'My_Iron_Cache');
 	
 	# Operate with items.
-	my $iron_cache_item_put = IO::Iron::IronCache::Item->new( {
+	my $iron_cache_item_put = IO::Iron::IronCache::Item->new(
 		'value' => "10",
-		'expires_in' => 60 # Expires in 60 seconds.
+		'expires_in' => 60, # Expires in 60 seconds.
 		#'replace' => 1, # Only set the item if the item is already in the cache.
 		#'add' => 1 # Only set the item if the item is not already in the cache.
 		#'cas' => '12345' # Only set the item if there is already an item with matching key and cas.
-		} );
-	my $item_put_ok = $iron_cache->put('my_item', $iron_cache_item_put);
-	my $item_put_new_value = $iron_cache->increment('my_item', 15);
-	my $iron_cache_item_get = $iron_cache->get('my_item');
-	my $item_deleted_ok = $iron_cache->delete('my_item');
+		);
+	my $item_put_ok = $iron_cache->put('key' => 'my_item', 'item' => $iron_cache_item_put);
+	my $item_put_new_value = $iron_cache->increment('key' => 'my_item', 'increment' => 15);
+	my $iron_cache_item_get = $iron_cache->get('key' => 'my_item');
+	my $item_deleted_ok = $iron_cache->delete('key' => 'my_item');
 	my $items_cleared_ok = $iron_cache->clear();
 
 
@@ -71,6 +72,7 @@ use Log::Any  qw{$log};
 use Hash::Util qw{lock_keys lock_keys_plus unlock_keys legal_keys};
 use Carp::Assert::More;
 use English '-no_match_vars';
+use Params::Validate qw(:all);
 
 use IO::Iron::IronCache::Api ();
 use IO::Iron::Common ();
@@ -107,7 +109,7 @@ value persistance/expiry as requested and cloud-optimized performance.
 IO::Iron::IronCache::Client is a normal Perl package meant to be used as an object.
 
 	require IO::Iron::IronCache::Client;
-	my $iron_cache_client = IO::Iron::IronCache::Client->new( { } );
+	my $iron_cache_client = IO::Iron::IronCache::Client->new();
 
 Please see L<IO::Iron|IO::Iron> for further parameters and general usage.
 
@@ -125,10 +127,11 @@ with e.g. Perl package Try::Tiny.
 
 	# Create the cache client.
 	require IO::Iron::IronCache::Client;
-	my $ironcache_client = IO::Iron::IronCache::Client->new( {} );
+	my $ironcache_client = IO::Iron::IronCache::Client->new();
 	# Or
-	$ironcache_client = IO::Iron::IronCache::Client->new( { 
-		config => 'iron_cache.json} );
+	$ironcache_client = IO::Iron::IronCache::Client->new(
+		config => 'iron_cache.json
+		);
 	
 	# Operate with caches.
 	# Get all the existing caches as objects of 
@@ -137,29 +140,29 @@ with e.g. Perl package Try::Tiny.
 	
 	# Create a new cache object by its name.
 	# Returns object of class IO::Iron::IronCache::Cache.
-	my $iron_cache = $ironcache_client->create_cache('My_Iron_Cache');
+	my $iron_cache = $ironcache_client->create_cache('name' => 'My_Iron_Cache');
 	# Or get an existing cache.
-	$iron_cache = $ironcache_client->get_cache('My_Iron_Cache');
+	$iron_cache = $ironcache_client->get_cache('name' => 'My_Iron_Cache');
 	
 	# Delete a cache by its name. Return 1 for success.
-	my $cache_deleted = $ironcache_client->delete_cache('My_Iron_Cache');
+	my $cache_deleted = $ironcache_client->delete_cache('name' => 'My_Iron_Cache');
 	
 	# Get info about a cache.
-	my $info_hash = $ironcache_client->get_info_about_cache('My_Iron_Cache');
+	my $info_hash = $ironcache_client->get_info_about_cache('name' => 'My_Iron_Cache');
 	
 	# Operate with items.
 	# Create an item.
-	my $iron_cache_item_put = IO::Iron::IronCache::Item->new( {
+	my $iron_cache_item_put = IO::Iron::IronCache::Item->new(
 		'value' => "10",
 		'expires_in' => 60, # Expires in 60 seconds.
 		#'replace' => 1, # Only set the item if the item is already in the cache.
 		#'add' => 1, # Only set the item if the item is not already in the cache.
 		#'cas' => '12345', # Only set the item if there is already an item with matching key and cas.
-		} );
-	my $item_put = $iron_cache->put('my_item_key', $iron_cache_item_put);
-	my $item_put_new_value = $iron_cache->increment('my_item_key', 15);
-	my $iron_cache_item_get = $iron_cache->get('my_item_key');
-	my $item_deleted = $iron_cache->delete('my_item_key');
+		);
+	my $item_put = $iron_cache->put('key' => 'my_item_key', 'item' => $iron_cache_item_put);
+	my $item_put_new_value = $iron_cache->increment('key' => 'my_item_key', 'increment' => 15);
+	my $iron_cache_item_get = $iron_cache->get('key' => 'my_item_key');
+	my $item_deleted = $iron_cache->delete('key' => 'my_item_key');
 
 	# Empty the cache (delete all items inside). Return 1 for success.
 	my $items_cleared_ok = $iron_cache->clear();
@@ -191,17 +194,17 @@ It can be used to verify that the value has not been changed since the
 last get operation.
 
 	$iron_cache_item_key = 'my_item_key';
-	my $iron_cache_item_put_1 = IO::Iron::IronCache::Item->new( {
+	my $iron_cache_item_put_1 = IO::Iron::IronCache::Item->new(
 		'value' => "10",
 		'expires_in' => 60, # Expires in 60 seconds.
 		'replace' => 1,
-		} );
+		);
 	# Or
-	my $iron_cache_item_put_2 = IO::Iron::IronCache::Item->new( {
+	my $iron_cache_item_put_2 = IO::Iron::IronCache::Item->new(
 		'value' => "10",
 		'expires_in' => 60, # Expires in 60 seconds.
 		'add' => 1,
-		} );
+		);
 
 IO::Iron::IronCache::Cache objects are created by the client 
 (object of IO::Iron::IronCache::Client) or they can be created by the user.
@@ -228,22 +231,22 @@ Get cache name.
 
 Put an item into the cache. Returns 1 if successful.
 
-	my $item_put = $iron_cache->put($iron_cache_item_key, $iron_cache_item_put);
+	my $item_put = $iron_cache->put('key' => $iron_cache_item_key, 'item' => $iron_cache_item_put);
 
 If the item is an integer value, you can simply increment it by another 
 value. If the value is negative, the value in the cache will be 
 decreased. Returns the new value.
 
-	my $item_put_new_value = $iron_cache->increment($iron_cache_item_key, 15);
+	my $item_put_new_value = $iron_cache->increment('key' => $iron_cache_item_key, 'increment' => 15);
 
 Get an item from the cache by its name. Returns an object of the class 
 IO::Iron::IronCache::Item if successful.
 
-	my $iron_cache_item_get = $iron_cache->get($iron_cache_item_key);
+	my $iron_cache_item_get = $iron_cache->get('key' => $iron_cache_item_key);
 
 Delete an item in the cache by its name. Returns 1 if successful.
 
-	my $item_deleted_ok = $iron_cache->delete($iron_cache_item_key);
+	my $item_deleted_ok = $iron_cache->delete('key' => $iron_cache_item_key);
 
 Clear the cache (delete all items inside). Return 1 for success.
 
@@ -259,7 +262,7 @@ Error is formatted as such: IronHTTPCallException: status_code=<HTTP status code
 	use Try::Tiny;
 	use Scalar::Util qw{blessed};
 	try {
-		my $queried_iron_cache_01 = $iron_cache_client->get_cache('unique_cache_name_01');
+		my $queried_iron_cache_01 = $iron_cache_client->get_cache('name' => 'unique_cache_name_01');
 	}
 	catch {
 		die $_ unless blessed $_ && $_->can('rethrow');
@@ -283,17 +286,23 @@ Creator function.
 =cut
 
 sub new {
-	my ($class, $params) = @_;
-	$log->tracef('Entering new(%s, %s)', $class, $params);
+	my $class = shift;
+	my %params = validate(
+		@_, {
+			map { $_ => { type => SCALAR, optional => 1 }, } IO::Iron::Common::IRON_CLIENT_PARAMETERS(), ## no critic (ValuesAndExpressions::ProhibitCommaSeparatedStatements)
+		}
+	);
+
+	$log->tracef('Entering new(%s, %s)', $class, %params);
 	my $self = IO::Iron::ClientBase->new();
 	# Add more keys to the self hash.
 	my @self_keys = (
-			'caches',        # References to all objects created of class IO::Iron::IronCache::Cache.
+			'caches',        # References to all objects created of class IO::Iron::IronCache::Cache. Not in use!
 			legal_keys(%{$self}),
 	);
 	unlock_keys(%{$self});
 	lock_keys_plus(%{$self}, @self_keys);
-	my $config = IO::Iron::Common::get_config(%{$params}); # TODO Temp fix for the named parameters scheme
+	my $config = IO::Iron::Common::get_config(%params);
 	$log->debugf('The config: %s', $config);
 	$self->{'project_id'} = defined $config->{'project_id'} ? $config->{'project_id'} : undef;
 	my @caches;
@@ -305,7 +314,7 @@ sub new {
 	lock_keys(%{$self}, @self_keys);
 
 	# Set up the connection client
-	my $client = IO::Iron::Connection->new( {
+	my $connection = IO::Iron::Connection->new( {
 		'project_id' => $config->{'project_id'},
 		'token' => $config->{'token'},
 		'host' => $config->{'host'},
@@ -314,10 +323,10 @@ sub new {
 		'api_version' => $config->{'api_version'},
 		'host_path_prefix' => $config->{'host_path_prefix'},
 		'timeout' => $config->{'timeout'},
-		'connector' => $params->{'connector'},
+		'connector' => $params{'connector'},
 		}
 	);
-	$self->{'connection'} = $client;
+	$self->{'connection'} = $connection;
 	$log->debugf('IronCache client created with config: (project_id=%s; token=%s; host=%s; timeout=%s).', $config->{'project_id'}, $config->{'token'}, $config->{'host'}, $config->{'timeout'});
 	$log->tracef('Exiting new: %s', $self);
 	return $self;
@@ -325,7 +334,7 @@ sub new {
 
 =head2 get_caches
 
-Return objects of class IO::Iron::IronCache::Cache representing caches 
+Return objects of class IO::Iron::IronCache::Cache representing all the caches 
 within this project.
 
 =over 8
@@ -339,7 +348,12 @@ within this project.
 =cut
 
 sub get_caches {
-	my ($self) = @_;
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			# No parameters
+		}
+	);
 	$log->tracef('Entering get_caches()');
 
 	my @caches;
@@ -356,7 +370,7 @@ sub get_caches {
 		});
 		push @caches, $cache;
 	}
-	push @{$self->{'caches'}}, @caches;
+	#push @{$self->{'caches'}}, @caches; # Store only created caches!
 	$log->debugf('Created caches: %s', \@caches);
 
 	$log->tracef('Exiting get_caches: %s', \@caches);
@@ -376,14 +390,18 @@ sub get_caches {
 =cut
 
 sub get_info_about_cache {
-	my ($self, $cache_name) = @_;
-	$log->tracef('Entering get_info_about_cache(%s)', $cache_name);
-	assert_nonblank( $cache_name, 'cache_name is not defined or is blank');
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			'name' => { type => SCALAR, }, # cache name.
+		}
+	);
+	$log->tracef('Entering get_info_about_cache(%s)', \%params);
 
 	my $connection = $self->{'connection'};
 	my ($http_status_code, $response_message) = $connection->perform_iron_action(
 			IO::Iron::IronCache::Api::IRONCACHE_GET_INFO_ABOUT_A_CACHE(),
-			{ '{Cache Name}' => $cache_name, }
+			{ '{Cache Name}' => $params{'name'}, }
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
 	my $info = $response_message;
@@ -414,14 +432,18 @@ creating IO::Iron::IronCache::Client object.
 =cut
 
 sub get_cache {
-	my ($self, $cache_name) = @_;
-	$log->tracef('Entering get_cache(%s)', $cache_name);
-	assert_nonblank( $cache_name, 'cache_name is not defined or is blank');
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			'name' => { type => SCALAR, }, # cache name.
+		}
+	);
+	$log->tracef('Entering get_cache(%s)', \%params);
 
 	my $connection = $self->{'connection'};
 	my ($http_status_code, $response_message) = $connection->perform_iron_action(
 			IO::Iron::IronCache::Api::IRONCACHE_GET_INFO_ABOUT_A_CACHE(),
-			{ '{Cache Name}' => $cache_name, }
+			{ '{Cache Name}' => $params{'name'}, }
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
 	my $get_cache_name = $response_message->{'name'};
@@ -431,7 +453,7 @@ sub get_cache {
 		'connection' => $self->{'connection'},
 	});
 	push @{$self->{'caches'}}, $cache;
-	$log->debugf('Created a new IO::Iron::IronCache::Cache object (name=%s.', $get_cache_name);
+	$log->debugf('Created a new IO::Iron::IronCache::Cache object (name=%s).', $get_cache_name);
 	$log->tracef('Exiting get_cache: %s', $cache);
 	return $cache;
 }
@@ -457,18 +479,22 @@ creating IO::Iron::IronCache::Client object.
 =cut
 
 sub create_cache {
-	my ($self, $cache_name) = @_;
-	$log->tracef('Entering create_cache(%s)', $cache_name);
-	assert_nonblank( $cache_name, 'cache_name is not defined or is blank');
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			'name' => { type => SCALAR, }, # cache name.
+		}
+	);
+	$log->tracef('Entering create_cache(%s)', \%params);
 
 	my $cache = IO::Iron::IronCache::Cache->new({
 		'ironcache_client' => $self, # Pass a reference to the parent object.
-		'name' => $cache_name,
+		'name' => $params{'name'},
 		'connection' => $self->{'connection'},
 	});
 	push @{$self->{'caches'}}, $cache;
 
-	$log->debugf('Created a new IO::Iron::IronCache::Cache object (name=%s.', $cache_name);
+	$log->debugf('Created a new IO::Iron::IronCache::Cache object (name=%s.)', $params{'name'});
 	$log->tracef('Exiting get_cache: %s', $cache);
 	return $cache;
 }
@@ -490,18 +516,25 @@ Delete an IronCache cache.
 =cut
 
 sub delete_cache {
-	my ($self, $cache_name) = @_;
-	$log->tracef('Entering delete_cache(%s)', $cache_name);
-	assert_nonblank( $cache_name, 'cache_name is not defined or is blank');
+	my $self = shift;
+	my %params = validate(
+		@_, {
+			'name' => { type => SCALAR, }, # cache name.
+		}
+	);
+	$log->tracef('Entering delete_cache(%s)', \%params);
 
 	my $connection = $self->{'connection'};
 	my ($http_status_code, $response_message) = $connection->perform_iron_action(
 			IO::Iron::IronCache::Api::IRONCACHE_DELETE_A_CACHE(),
 			{
-				'{Cache Name}' => $cache_name,
+				'{Cache Name}' => $params{'name'},
 			}
 		);
 	$self->{'last_http_status_code'} = $http_status_code;
+	@{$self->{'caches'}} = grep { $_->name() ne $params{'name'} } @{$self->{'caches'}};
+
+	$log->debugf('Deleted cache (name=%s.)', $params{'name'});
 	$log->tracef('Exiting delete_cache: %d', 1);
 	return 1;
 }
