@@ -1,5 +1,8 @@
 Revision history for IO-Iron
 
+0.07    2014-Mar-05
+        Fixed an autodefer bug.
+
 0.06    2014-Feb-23
         IronCache API changed to use named parameters.
 

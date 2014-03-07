@@ -25,11 +25,11 @@ IO::Iron::Connector - REST API Connector, HTTP interface class.
 
 =head1 VERSION
 
-Version 0.06
+Version 0.07
 
 =cut
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 
 =head1 SYNOPSIS
@@ -139,7 +139,7 @@ sub perform_iron_action { ## no critic (Subroutines::ProhibitExcessComplexity)
 	my $per_page = $iron_action->{'per_page'} ? $iron_action->{'per_page'} : 0;
 	my $url_params = q{};
 	if(exists $iron_action->{'url_params'} && ref $iron_action->{'url_params'} eq 'HASH') {
-		foreach (keys $iron_action->{'url_params'}) {
+		foreach (keys %{$iron_action->{'url_params'}}) {
 			$log->tracef('perform_iron_action(): url_param:%s', $_);
 			if ($params->{'{'.$_.'}'}) {
 				$url_params .= "$_={$_}&";
