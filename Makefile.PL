@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use 5.008_001;
+use 5.010_000;
 
 use ExtUtils::MakeMaker 6.30;
 
@@ -31,7 +31,7 @@ my %WriteMakefileArgs = (
     "File::HomeDir" => 0,
     "File::Slurp" => 0,
     "File::Spec" => 0,
-    "Hash::Util" => 0,
+    "Hash::Util" => "0.06",
     "JSON" => 0,
     "Log::Any" => 0,
     "Params::Validate" => 0,
@@ -49,7 +49,7 @@ my %WriteMakefileArgs = (
     "File::Remove" => 0,
     "Test::More" => 0
   },
-  "VERSION" => "0.07_01",
+  "VERSION" => "0.07_03",
   "test" => {
     "TESTS" => "t/*.t t/Iron/*.t t/IronCache/*.t t/IronMQ/*.t t/IronWorker/*.t"
   }
@@ -69,7 +69,7 @@ my %FallbackPrereqs = (
   "File::Remove" => 0,
   "File::Slurp" => 0,
   "File::Spec" => 0,
-  "Hash::Util" => 0,
+  "Hash::Util" => "0.06",
   "JSON" => 0,
   "Log::Any" => 0,
   "Params::Validate" => 0,
