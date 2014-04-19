@@ -10,6 +10,8 @@ integ_t/IronCache/cache.t
 integ_t/IronMQ/client_all.t
 integ_t/IronMQ/client_create_queue.t
 integ_t/IronMQ/client_exceptions.t
+integ_t/IronMQ/push_queue_all.t
+integ_t/IronMQ/queue_alerts.t
 integ_t/IronMQ/queue_all.t
 integ_t/IronMQ/queue_pull.t
 integ_t/IronMQ/queue_push.t
@@ -40,7 +42,7 @@ t/Iron/load.t
 t/IronCache/load.t
 t/IronMQ/load.t
 t/IronWorker/load.t
-t/author-critic.t
 t/boilerplate.t
+t/release-kwalitee.t
 t/release-pod-coverage.t
 t/release-pod-syntax.t

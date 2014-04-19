@@ -24,6 +24,7 @@ my %WriteMakefileArgs = (
     "Carp" => 0,
     "Carp::Assert" => 0,
     "Carp::Assert::More" => 0,
+    "Data::Dumper" => 0,
     "Data::UUID" => 0,
     "English" => 0,
     "Exception::Class" => 0,
@@ -49,7 +50,7 @@ my %WriteMakefileArgs = (
     "File::Remove" => 0,
     "Test::More" => 0
   },
-  "VERSION" => "0.07_03",
+  "VERSION" => "0.08",
   "test" => {
     "TESTS" => "t/*.t t/Iron/*.t t/IronCache/*.t t/IronMQ/*.t t/IronWorker/*.t"
   }
@@ -60,6 +61,7 @@ my %FallbackPrereqs = (
   "Carp" => 0,
   "Carp::Assert" => 0,
   "Carp::Assert::More" => 0,
+  "Data::Dumper" => 0,
   "Data::UUID" => 0,
   "English" => 0,
   "Exception::Class" => 0,
