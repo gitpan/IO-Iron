@@ -53,9 +53,9 @@ my %WriteMakefileArgs = (
     "Test::More" => 0,
     "lib" => 0
   },
-  "VERSION" => "0.10",
+  "VERSION" => "0.11",
   "test" => {
-    "TESTS" => "t/*.t t/Iron/*.t t/IronCache/*.t t/IronMQ/*.t t/IronWorker/*.t"
+    "TESTS" => "t/Iron/*.t t/IronCache/*.t t/IronMQ/*.t t/IronWorker/*.t"
   }
 );
 
